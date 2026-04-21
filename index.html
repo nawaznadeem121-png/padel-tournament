@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <title>Padel Tournament Manager</title>
+
+  <style>
+
+    body { font-family: Arial; padding: 20px; background:#f5f5f5; }
+
+    h1 { text-align:center; }
+
+    table { border-collapse: collapse; width: 100%; margin-bottom: 30px; background:white;}
+
+    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+
+    th { background:#222; color:white; }
+
+    input { width:50px; text-align:center; }
+
+    .top8 { background:#d4edda; }
+
+  </style>
+
+</head>
+
+<body>
+
+<h1>🏆 Padel Tournament Manager</h1>
+
+<h2>Teams</h2>
+
+<table id="teamsTable"></table>
+
+<h2>Match Schedule</h2>
+
+<table id="matchesTable"></table>
+
+<h2>Live Standings</h2>
+
+<table id="standingsTable"></table>
+
+<script>
+
+let teams = [
+
+  "A1","A2","A3","A4",
+
+  "B1","B2","B3","B4",
+
+  "C1","C2","C3","C4"
+
+];
+
+let matches = [
+
+  ["A1","A2"],["A3","A4"],["B1","B2"],["B3","B4"],
+
+  ["C1","C2"],["C3","C4"],["A1","A3"],["A2","A4"],
+
+  ["B1","B3"],["B2","B4"],["C1","C3"],["C2","C4"],
+
+  ["A1","A4"],["A2","A3"],["B1","B4"],["B2","B3"],
+
+  ["C1","C4"],["C2","C3"]
+
+];
+
+let stats = {};
+
+teams.forEach(t => {
+
+  stats[t] = {played:0, won:0, lost:0, points:0};
+
+});
+
+function renderTeams() {
+
+  let html = "<tr><th>Team Name</th></tr>";
+
+  teams.forEach((t,i) => {
+
+    html += `<tr><td><input value="${t}" onchange="updateTeam(${i}, this.value)"></td></tr>`;
+
+  });
+
+  document.getElementById("teamsTable").innerHTML = html;
+
+}
+
+function updateTeam(index, value) {
+
+  let old = teams[index];
+
+  teams[index] = value;
+
+  stats[value] = stats[old];
+
+  delete stats[old];
+
+  matches = matches.map(m => m.map(team => team === old ? value : team));
+
+  renderMatches();
+
+  updateStandings();
+
+}
+
+function renderMatches() {
+
+  let html = "<tr><th>Team 1</th><th>Score</th><th>Score</th><th>Team 2</th></tr>";
+
+  matches.forEach((m,i) => {
+
+    html += `
+
+      <tr>
+
+        <td>${m[0]}</td>
+
+        <td><input type="number" onchange="updateScore(${i},0,this.value)"></td>
+
+        <td><input type="number" onchange="updateScore(${i},1,this.value)"></td>
+
+        <td>${m[1]}</td>
+
+      </tr>
+
+    `;
+
+  });
+
+  document.getElementById("matchesTable").innerHTML = html;
+
+}
+
+let scores = Array(matches.length).fill([null,null]);
+
+function updateScore(matchIndex, teamIndex, value) {
+
+  if (!scores[matchIndex]) scores[matchIndex] = [null,null];
+
+  scores[matchIndex][teamIndex] = parseInt(value);
+
+  recalcStats();
+
+  updateStandings();
+
+}
+
+function recalcStats() {
+
+  Object.keys(stats).forEach(t => {
+
+    stats[t] = {played:0, won:0, lost:0, points:0};
+
+  });
+
+  matches.forEach((m,i) => {
+
+    let s = scores[i];
+
+    if (!s || s[0]==null || s[1]==null) return;
+
+    let t1 = m[0], t2 = m[1];
+
+    stats[t1].played++;
+
+    stats[t2].played++;
+
+    if (s[0] > s[1]) {
+
+      stats[t1].won++;
+
+      stats[t2].lost++;
+
+      stats[t1].points += 3;
+
+    } else {
+
+      stats[t2].won++;
+
+      stats[t1].lost++;
+
+      stats[t2].points += 3;
+
+    }
+
+  });
+
+}
+
+function updateStandings() {
+
+  let sorted = Object.entries(stats).sort((a,b)=>b[1].points - a[1].points);
+
+  let html = "<tr><th>Rank</th><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th></tr>";
+
+  sorted.forEach((t,i) => {
+
+    html += `
+
+      <tr class="${i<8 ? 'top8':''}">
+
+        <td>${i+1}</td>
+
+        <td>${t[0]}</td>
+
+        <td>${t[1].played}</td>
+
+        <td>${t[1].won}</td>
+
+        <td>${t[1].lost}</td>
+
+        <td>${t[1].points}</td>
+
+      </tr>
+
+    `;
+
+  });
+
+  document.getElementById("standingsTable").innerHTML = html;
+
+}
+
+renderTeams();
+
+renderMatches();
+
+updateStandings();
+
+</script>
+
+</body>
+
+</html>
