@@ -1,239 +1,183 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
-
-  <title>The Court Club - Tournament - 02/05/2026</title>
-
-  <style>
-
-    body { font-family: Arial; padding: 20px; background:#f5f5f5; }
-
-    h1 { text-align:center; }
-
-    table { border-collapse: collapse; width: 100%; margin-bottom: 30px; background:white;}
-
-    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-
-    th { background:#222; color:white; }
-
-    input { width:50px; text-align:center; }
-
-    .top8 { background:#d4edda; }
-
-  </style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Padel Tourney Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
 </head>
-
-<body>
-
-<h1>🏆 Padel Tournament Manager</h1>
-
-<h2>Teams</h2>
-
-<table id="teamsTable"></table>
-
-<h2>Match Schedule</h2>
-
-<table id="matchesTable"></table>
-
-<h2>Live Standings</h2>
-
-<table id="standingsTable"></table>
-
-<script>
-
-let teams = [
-
-  "A1","A2","A3","A4",
-
-  "B1","B2","B3","B4",
-
-  "C1","C2","C3","C4"
-
-];
-
-let matches = [
-
-  ["A1","A2"],["A3","A4"],["B1","B2"],["B3","B4"],
-
-  ["C1","C2"],["C3","C4"],["A1","A3"],["A2","A4"],
-
-  ["B1","B3"],["B2","B4"],["C1","C3"],["C2","C4"],
-
-  ["A1","A4"],["A2","A3"],["B1","B4"],["B2","B3"],
-
-  ["C1","C4"],["C2","C3"]
-
-];
-
-let stats = {};
-
-teams.forEach(t => {
-
-  stats[t] = {played:0, won:0, lost:0, points:0};
-
-});
-
-function renderTeams() {
-
-  let html = "<tr><th>Team Name</th></tr>";
-
-  teams.forEach((t,i) => {
-
-    html += `<tr><td><input value="${t}" onchange="updateTeam(${i}, this.value)"></td></tr>`;
-
-  });
-
-  document.getElementById("teamsTable").innerHTML = html;
-
-}
-
-function updateTeam(index, value) {
-
-  let old = teams[index];
-
-  teams[index] = value;
-
-  stats[value] = stats[old];
-
-  delete stats[old];
-
-  matches = matches.map(m => m.map(team => team === old ? value : team));
-
-  renderMatches();
-
-  updateStandings();
-
-}
-
-function renderMatches() {
-
-  let html = "<tr><th>Team 1</th><th>Score</th><th>Score</th><th>Team 2</th></tr>";
-
-  matches.forEach((m,i) => {
-
-    html += `
-
-      <tr>
-
-        <td>${m[0]}</td>
-
-        <td><input type="number" onchange="updateScore(${i},0,this.value)"></td>
-
-        <td><input type="number" onchange="updateScore(${i},1,this.value)"></td>
-
-        <td>${m[1]}</td>
-
-      </tr>
-
-    `;
-
-  });
-
-  document.getElementById("matchesTable").innerHTML = html;
-
-}
-
-let scores = Array(matches.length).fill([null,null]);
-
-function updateScore(matchIndex, teamIndex, value) {
-
-  if (!scores[matchIndex]) scores[matchIndex] = [null,null];
-
-  scores[matchIndex][teamIndex] = parseInt(value);
-
-  recalcStats();
-
-  updateStandings();
-
-}
-
-function recalcStats() {
-
-  Object.keys(stats).forEach(t => {
-
-    stats[t] = {played:0, won:0, lost:0, points:0};
-
-  });
-
-  matches.forEach((m,i) => {
-
-    let s = scores[i];
-
-    if (!s || s[0]==null || s[1]==null) return;
-
-    let t1 = m[0], t2 = m[1];
-
-    stats[t1].played++;
-
-    stats[t2].played++;
-
-    if (s[0] > s[1]) {
-
-      stats[t1].won++;
-
-      stats[t2].lost++;
-
-      stats[t1].points += 3;
-
-    } else {
-
-      stats[t2].won++;
-
-      stats[t1].lost++;
-
-      stats[t2].points += 3;
-
-    }
-
-  });
-
-}
-
-function updateStandings() {
-
-  let sorted = Object.entries(stats).sort((a,b)=>b[1].points - a[1].points);
-
-  let html = "<tr><th>Rank</th><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th></tr>";
-
-  sorted.forEach((t,i) => {
-
-    html += `
-
-      <tr class="${i<8 ? 'top8':''}">
-
-        <td>${i+1}</td>
-
-        <td>${t[0]}</td>
-
-        <td>${t[1].played}</td>
-
-        <td>${t[1].won}</td>
-
-        <td>${t[1].lost}</td>
-
-        <td>${t[1].points}</td>
-
-      </tr>
-
-    `;
-
-  });
-
-  document.getElementById("standingsTable").innerHTML = html;
-
-}
-
-renderTeams();
-
-renderMatches();
-
-updateStandings();
-
-</script>
-
+<body class="bg-slate-50 text-slate-900 font-sans pb-10">
+
+    <header class="bg-indigo-600 text-white p-6 shadow-lg text-center">
+        <h1 class="text-2xl font-bold uppercase tracking-wider">Padel Tournament</h1>
+        <p class="text-sm opacity-80">12 Teams • 3 Groups • Knockouts</p>
+    </header>
+
+    <nav class="flex border-b bg-white sticky top-0 z-10">
+        <button onclick="showTab('setup')" class="flex-1 p-4 font-semibold border-b-2 border-transparent" id="tab-setup">Setup</button>
+        <button onclick="showTab('groups')" class="flex-1 p-4 font-semibold border-b-2 border-transparent" id="tab-groups">Groups</button>
+        <button onclick="showTab('knockouts')" class="flex-1 p-4 font-semibold border-b-2 border-transparent" id="tab-knockouts">Knockouts</button>
+    </nav>
+
+    <main class="p-4 max-w-md mx-auto">
+
+        <section id="setup" class="tab-content active">
+            <h2 class="text-xl font-bold mb-4">Enter Team Names</h2>
+            <div id="team-inputs" class="space-y-2">
+                </div>
+            <button onclick="generateTournament()" class="w-full mt-6 bg-indigo-600 text-white font-bold py-4 rounded-xl shadow-md active:scale-95 transition">
+                Generate Schedule
+            </button>
+            <button onclick="resetTournament()" class="w-full mt-2 text-red-500 text-sm py-2">Reset All Data</button>
+        </section>
+
+        <section id="groups" class="tab-content">
+            <div id="group-schedule" class="space-y-6">
+                <p class="text-center text-slate-500 mt-10">Enter team names in Setup first.</p>
+            </div>
+        </section>
+
+        <section id="knockouts" class="tab-content">
+            <h2 class="text-xl font-bold mb-4">Final Stage</h2>
+            <div class="space-y-8">
+                <div>
+                    <h3 class="bg-slate-800 text-white px-3 py-1 rounded text-sm mb-3 inline-block">Quarter-Finals</h3>
+                    <div id="qf-matches" class="space-y-2"></div>
+                </div>
+                <div>
+                    <h3 class="bg-slate-800 text-white px-3 py-1 rounded text-sm mb-3 inline-block">Semi-Finals</h3>
+                    <div id="sf-matches" class="space-y-2"></div>
+                </div>
+                <div>
+                    <h3 class="bg-indigo-600 text-white px-3 py-1 rounded text-sm mb-3 inline-block">Final</h3>
+                    <div id="f-match" class="space-y-2"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Store tournament data
+        let tournament = JSON.parse(localStorage.getItem('padelTourney')) || {
+            teams: Array(12).fill(""),
+            groups: [[], [], []],
+            generated: false
+        };
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('border-indigo-600', 'text-indigo-600'));
+            document.getElementById('tab-' + tabId).classList.add('border-indigo-600', 'text-indigo-600');
+        }
+
+        function initSetup() {
+            const container = document.getElementById('team-inputs');
+            container.innerHTML = '';
+            tournament.teams.forEach((name, i) => {
+                container.innerHTML += `
+                    <div class="flex items-center bg-white p-2 rounded-lg shadow-sm border">
+                        <span class="w-8 text-slate-400 font-bold">${i + 1}</span>
+                        <input type="text" value="${name}" onchange="updateTeam(${i}, this.value)" 
+                               placeholder="Team Name" class="flex-1 outline-none p-1">
+                    </div>
+                `;
+            });
+        }
+
+        function updateTeam(index, name) {
+            tournament.teams[index] = name;
+            localStorage.setItem('padelTourney', JSON.stringify(tournament));
+        }
+
+        function generateTournament() {
+            // Split teams into 3 groups
+            const shuffled = [...tournament.teams];
+            tournament.groups[0] = shuffled.slice(0, 4);
+            tournament.groups[1] = shuffled.slice(4, 8);
+            tournament.groups[2] = shuffled.slice(8, 12);
+            tournament.generated = true;
+            
+            localStorage.setItem('padelTourney', JSON.stringify(tournament));
+            renderSchedules();
+            showTab('groups');
+        }
+
+        function renderSchedules() {
+            if(!tournament.generated) return;
+
+            // Render Group Stage
+            const groupContainer = document.getElementById('group-schedule');
+            groupContainer.innerHTML = '';
+
+            tournament.groups.forEach((group, gIdx) => {
+                const groupName = String.fromCharCode(65 + gIdx); // A, B, C
+                let html = `<div class="bg-white p-4 rounded-xl shadow-sm border">
+                                <h3 class="font-black text-indigo-600 mb-3 border-b pb-2">GROUP ${groupName}</h3>
+                                <div class="space-y-3">`;
+                
+                // Round Robin Pairings (1-2, 3-4, 1-3, 2-4, 1-4, 2-3)
+                const pairings = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
+                pairings.forEach(p => {
+                    html += `
+                        <div class="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
+                            <span class="font-medium w-2/5">${group[p[0]] || 'TBD'}</span>
+                            <span class="text-xs text-slate-400 font-bold italic">VS</span>
+                            <span class="font-medium w-2/5 text-right">${group[p[1]] || 'TBD'}</span>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+                groupContainer.innerHTML += html;
+            });
+
+            // Render Knockout Placeholders
+            document.getElementById('qf-matches').innerHTML = `
+                ${matchCard("QF 1", "Winner Grp A", "Best 3rd #2")}
+                ${matchCard("QF 2", "Winner Grp B", "Best 3rd #1")}
+                ${matchCard("QF 3", "Winner Grp C", "Runner-up Grp A")}
+                ${matchCard("QF 4", "Runner-up Grp B", "Runner-up Grp C")}
+            `;
+
+            document.getElementById('sf-matches').innerHTML = `
+                ${matchCard("SF 1", "Winner QF 1", "Winner QF 4")}
+                ${matchCard("SF 2", "Winner QF 2", "Winner QF 3")}
+            `;
+
+            document.getElementById('f-match').innerHTML = `
+                ${matchCard("FINAL", "Winner SF 1", "Winner SF 2")}
+            `;
+        }
+
+        function matchCard(label, t1, t2) {
+            return `
+                <div class="bg-white p-3 rounded-lg border shadow-sm flex justify-between items-center">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase w-12">${label}</span>
+                    <span class="text-sm font-semibold">${t1}</span>
+                    <span class="text-xs px-2 text-slate-300">vs</span>
+                    <span class="text-sm font-semibold">${t2}</span>
+                </div>
+            `;
+        }
+
+        function resetTournament() {
+            if(confirm("Are you sure? This wipes all teams and schedules.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // Init
+        initSetup();
+        renderSchedules();
+        showTab('setup');
+    </script>
 </body>
-
 </html>
