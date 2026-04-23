@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Padel Pro: Fixed History</title>
+    <title>Padel Pro: Full Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .tab-content { display: none; }
@@ -11,8 +11,6 @@
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         @keyframes flash { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.05); } }
         .animate-champion { animation: flash 0.8s ease-in-out infinite; }
-        .particle { position: fixed; top: -20px; width: 8px; height: 8px; border-radius: 2px; animation: fall linear infinite; pointer-events: none; z-index: 100; }
-        @keyframes fall { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(110vh) rotate(720deg); } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans pb-20 overflow-x-hidden">
@@ -22,7 +20,7 @@
             <div class="text-center mb-6">
                 <div class="text-4xl mb-2">🎾</div>
                 <h1 class="text-2xl font-bold">Padel Pro</h1>
-                <p class="text-slate-500 text-sm">Results are saved to your account</p>
+                <p class="text-slate-500 text-sm">Sign in to manage your tournament</p>
             </div>
             <div class="space-y-4">
                 <input type="text" id="username" placeholder="Username" class="w-full p-4 bg-slate-100 rounded-xl outline-none">
@@ -65,8 +63,9 @@
         <section id="groups" class="tab-content"><div id="group-schedule" class="space-y-6"></div></section>
         
         <section id="rankings" class="tab-content">
+            <h2 class="font-bold text-lg mb-4">Group Standings</h2>
             <div id="leaderboard-container" class="space-y-6"></div>
-            <div id="wildcard-list" class="mt-4 bg-amber-50 p-4 rounded-xl border border-amber-100"></div>
+            <div id="wildcard-list" class="mt-6 bg-amber-50 p-4 rounded-xl border border-amber-200"></div>
         </section>
 
         <section id="knockouts" class="tab-content">
@@ -74,17 +73,13 @@
             <div id="sf-bracket" class="space-y-3 mb-8"></div>
             <div id="f-bracket" class="space-y-3"></div>
             <div id="archive-button-container" class="mt-10 hidden">
-                <button onclick="archiveTournament()" id="archive-btn" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl">SAVE & ARCHIVE TO HISTORY</button>
+                <button onclick="archiveTournament()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl">SAVE & ARCHIVE TO HISTORY</button>
             </div>
         </section>
 
         <section id="history" class="tab-content">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="font-bold text-lg">Saved History</h2>
-                <button onclick="renderHistory()" class="text-[10px] font-bold text-indigo-600">Refresh</button>
-            </div>
-            <div id="history-list" class="space-y-3">
-                </div>
+            <h2 class="font-bold text-lg mb-4">Saved History</h2>
+            <div id="history-list" class="space-y-3"></div>
         </section>
 
         <section id="winner" class="tab-content text-center pt-20">
@@ -94,23 +89,18 @@
         </section>
     </main>
 
-    <div id="particle-container"></div>
-
     <script>
-        // Data Handling
         let currentUser = null;
         let activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false };
 
         const getDB = () => JSON.parse(localStorage.getItem('padelDB')) || {};
         const saveDB = (data) => localStorage.setItem('padelDB', JSON.stringify(data));
 
-        // --- AUTH ---
         function handleAuth(type) {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
             const db = getDB();
             if(!u || !p) return;
-
             if(type === 'register') {
                 if(db[u]) { alert("User exists"); return; }
                 db[u] = { password: p, history: [], active: activeData };
@@ -143,7 +133,6 @@
             saveDB(db);
         }
 
-        // --- UI RENDERERS ---
         function initInputs() {
             const cont = document.getElementById('team-inputs'); cont.innerHTML = "";
             activeData.teams.forEach((t, i) => {
@@ -177,8 +166,8 @@
 
         function refreshUI() {
             const res = calculate();
-            renderBracket(res.qual);
             renderTables(res);
+            renderBracket(res.qual);
             renderHistory();
         }
 
@@ -194,7 +183,8 @@
                     }
                 });
                 stats.sort((a,b) => b.p - a.p || b.gd - a.gd);
-                gStats.push(stats); thirds.push({...stats[2], g: String.fromCharCode(65+i)});
+                gStats.push(stats); 
+                thirds.push({...stats[2], groupName: String.fromCharCode(65+i)});
             });
             thirds.sort((a,b) => b.p - a.p || b.gd - a.gd);
             const wc = thirds.slice(0,2);
@@ -204,18 +194,33 @@
             }};
         }
 
+        // --- FIX: UPDATED RENDER TABLES TO INCLUDE WILDCARDS ---
         function renderTables(res) {
             const cont = document.getElementById('leaderboard-container'); cont.innerHTML = "";
             res.gStats.forEach((s, i) => {
                 let h = `<div class="bg-white p-4 rounded-xl shadow-sm border"><h3 class="font-bold text-xs text-indigo-600 mb-2 uppercase">Group ${String.fromCharCode(65+i)}</h3><table class="w-full text-xs">`;
-                s.forEach((t, idx) => h += `<tr class="${idx<2?'font-bold text-green-600':''}"><td class="py-1">${t.name}</td><td class="text-right">${t.p}pts</td></tr>`);
+                s.forEach((t, idx) => {
+                    const isQualified = idx < 2; // Top 2 always qualify
+                    h += `<tr class="${isQualified ? 'font-bold text-green-600' : ''}"><td class="py-1">${t.name || '---'}</td><td class="text-right">${t.p}pts (${t.gd > 0 ? '+':''}${t.gd})</td></tr>`;
+                });
                 cont.innerHTML += h + `</table></div>`;
+            });
+
+            // Populate Wildcard box
+            const wcCont = document.getElementById('wildcard-list');
+            wcCont.innerHTML = `<h3 class="font-black text-[10px] text-amber-600 mb-2 uppercase tracking-widest">Qualified Runners Up (Best 3rd)</h3>`;
+            res.wc.forEach((w, i) => {
+                wcCont.innerHTML += `
+                <div class="flex justify-between items-center py-1 border-b border-amber-100 last:border-0">
+                    <span class="text-xs font-bold text-amber-900">${i+1}. ${w.name || 'TBD'} (Group ${w.groupName})</span>
+                    <span class="text-xs font-black text-amber-600">${w.p}pts</span>
+                </div>`;
             });
         }
 
         function renderBracket(qual) {
             const wins = {};
-            const renderM = (id, t1, t2, contId, label) => {
+            const renderM = (id, t1, t2, contId) => {
                 const s = activeData.koScores[id] || ["",""];
                 const w = (t1 && t2 && s[0] !== "" && s[1] !== "") ? (s[0]>s[1]?t1:t2) : null;
                 wins[id] = w;
@@ -245,59 +250,36 @@
             activeData.koScores[id][t] = v === "" ? "" : parseInt(v); sync(); refreshUI();
         }
 
-        // --- HARDENED ARCHIVE & HISTORY ---
         function archiveTournament() {
             if(!activeData.finalWinner) return;
-            if(!confirm("Move this tournament to history and reset the board?")) return;
-
+            if(!confirm("Archive and reset the board?")) return;
             const db = getDB();
             const archiveEntry = {
                 id: Date.now(),
-                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                date: new Date().toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}),
                 winner: activeData.finalWinner,
                 data: JSON.parse(JSON.stringify(activeData))
             };
-
-            // Save to history
             if(!db[currentUser].history) db[currentUser].history = [];
             db[currentUser].history.unshift(archiveEntry);
-
-            // Reset active board
             activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false };
             db[currentUser].active = activeData;
-
             saveDB(db);
-            alert("Tournament successfully saved to history!");
-            
-            // UI Update without full reload
-            initInputs();
-            renderMatches();
-            refreshUI();
-            showTab('history');
+            initInputs(); renderMatches(); refreshUI(); showTab('history');
         }
 
         function renderHistory() {
             const db = getDB();
             const list = document.getElementById('history-list');
             list.innerHTML = "";
-
             if(!currentUser || !db[currentUser].history || db[currentUser].history.length === 0) {
-                list.innerHTML = `<div class="text-center py-10 bg-white rounded-xl border border-dashed border-slate-300">
-                    <p class="text-slate-400 text-sm">No saved tournaments found.</p>
-                </div>`;
+                list.innerHTML = `<div class="text-center py-10 bg-white rounded-xl border border-dashed border-slate-300"><p class="text-slate-400 text-sm">No saved history.</p></div>`;
                 return;
             }
-
             db[currentUser].history.forEach(h => {
                 const item = document.createElement('div');
                 item.className = "bg-white p-4 rounded-xl border shadow-sm flex justify-between items-center";
-                item.innerHTML = `
-                    <div onclick="viewHistory(${h.id})" class="flex-1 cursor-pointer">
-                        <p class="text-[10px] font-black text-slate-400 uppercase">${h.date}</p>
-                        <p class="font-bold text-slate-800">Winner: ${h.winner}</p>
-                    </div>
-                    <button onclick="deleteHistory(${h.id})" class="ml-4 text-xs text-red-400 font-bold p-2 hover:bg-red-50 rounded-lg">Delete</button>
-                `;
+                item.innerHTML = `<div onclick="viewHistory(${h.id})" class="flex-1 cursor-pointer"><p class="text-[10px] font-black text-slate-400 uppercase">${h.date}</p><p class="font-bold text-slate-800">Winner: ${h.winner}</p></div><button onclick="deleteHistory(${h.id})" class="text-xs text-red-400 font-bold p-2">Delete</button>`;
                 list.appendChild(item);
             });
         }
@@ -305,43 +287,27 @@
         function viewHistory(id) {
             const db = getDB();
             const entry = db[currentUser].history.find(x => x.id === id);
-            if(!entry) return;
             activeData = JSON.parse(JSON.stringify(entry.data));
-            refreshUI();
-            showTab('knockouts');
-            alert("Viewing archived results from " + entry.date + ". Note: Score changes here will not be saved.");
+            refreshUI(); showTab('knockouts');
         }
 
         function deleteHistory(id) {
-            if(!confirm("Delete this tournament from history forever?")) return;
+            if(!confirm("Delete forever?")) return;
             const db = getDB();
             db[currentUser].history = db[currentUser].history.filter(x => x.id !== id);
-            saveDB(db);
-            renderHistory();
+            saveDB(db); renderHistory();
         }
 
-        // --- NAVIGATION ---
         function showTab(id) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('border-indigo-600', 'text-indigo-600', 'border-amber-500'));
             const btn = document.getElementById('tab-'+id);
-            if(id === 'winner') { btn.classList.add('border-amber-500'); startConfetti(); }
-            else { btn.classList.add('border-indigo-600', 'text-indigo-600'); stopConfetti(); }
+            if(id === 'winner') btn.classList.add('border-amber-500');
+            else btn.classList.add('border-indigo-600', 'text-indigo-600');
             if(id === 'history') renderHistory();
+            if(id === 'rankings') refreshUI();
         }
-
-        function startConfetti() {
-            const cont = document.getElementById('particle-container'); cont.innerHTML = "";
-            for(let i=0; i<50; i++) {
-                const p = document.createElement('div'); p.className = 'particle';
-                p.style.left = Math.random() * 100 + 'vw';
-                p.style.backgroundColor = ['#fbbf24','#34d399','#60a5fa','#f87171'][Math.floor(Math.random()*4)];
-                p.style.animationDuration = (Math.random()*3+2)+'s'; p.style.animationDelay = (Math.random()*2)+'s';
-                cont.appendChild(p);
-            }
-        }
-        function stopConfetti() { document.getElementById('particle-container').innerHTML = ""; }
 
         window.onload = () => {
             const session = localStorage.getItem('padelSession');
