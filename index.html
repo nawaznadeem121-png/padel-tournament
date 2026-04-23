@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Padel Hub | Professional Club Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -12,12 +12,13 @@
         .tournament-tab { display: none; }
         .tournament-tab.active { display: block; }
         
-        /* Smooth transitions */
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* Custom scrollbar for mobile nav */
         .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* Mobile Zoom Fix */
+        input { font-size: 16px !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
@@ -33,13 +34,13 @@
                 <div class="hidden md:flex space-x-8 text-sm font-bold uppercase tracking-widest">
                     <button onclick="showPage('home')" class="hover:text-amber-400 transition">Home</button>
                     <button onclick="showPage('about')" class="hover:text-amber-400 transition">About</button>
-                    <button onclick="showPage('tournaments')" class="hover:text-amber-400 transition">Tournaments</button>
+                    <button onclick="showPage('tournaments')" class="text-amber-400 hover:text-white transition">Tournaments</button>
                     <button onclick="showPage('rules')" class="hover:text-amber-400 transition">Rules</button>
                     <button onclick="showPage('faqs')" class="hover:text-amber-400 transition">FAQs</button>
                 </div>
 
                 <div class="md:hidden">
-                    <button onclick="toggleMobileMenu()" class="text-2xl"><i class="fas fa-bars"></i></button>
+                    <button onclick="toggleMobileMenu()" class="text-2xl p-2"><i class="fas fa-bars"></i></button>
                 </div>
             </div>
         </div>
@@ -60,26 +61,8 @@
             <div class="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1626244101212-39d78a147ad4?q=80&w=2070')] bg-cover bg-center"></div>
             <div class="relative z-10 text-center px-6">
                 <h1 class="text-4xl md:text-6xl font-black text-white mb-4 leading-tight uppercase">Elevate Your <br><span class="text-amber-400">Padel Game</span></h1>
-                <p class="text-indigo-100 mb-8 max-w-md mx-auto">The ultimate platform for club rankings, professional tournament management, and community play.</p>
+                <p class="text-indigo-100 mb-8 max-w-md mx-auto">The ultimate platform for club rankings and professional tournament management.</p>
                 <button onclick="showPage('tournaments')" class="bg-amber-500 hover:bg-amber-400 text-indigo-950 font-black px-8 py-4 rounded-full transition transform hover:scale-105 shadow-lg uppercase tracking-widest text-sm">Organize Now</button>
-            </div>
-        </section>
-
-        <section class="max-w-5xl mx-auto py-16 px-6 grid md:grid-cols-3 gap-8">
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center">
-                <div class="text-3xl mb-4">🏆</div>
-                <h3 class="font-bold text-xl mb-2">Live Brackets</h3>
-                <p class="text-slate-500 text-sm">Automated Quarter-finals, Semi-finals, and Grand Finals logic built-in.</p>
-            </div>
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center">
-                <div class="text-3xl mb-4">📊</div>
-                <h3 class="font-bold text-xl mb-2">Smart Tables</h3>
-                <p class="text-slate-500 text-sm">Real-time point calculation and best runner-up qualification logic.</p>
-            </div>
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center">
-                <div class="text-3xl mb-4">💾</div>
-                <h3 class="font-bold text-xl mb-2">Data Security</h3>
-                <p class="text-slate-500 text-sm">Export and Import your club history to keep data safe across devices.</p>
             </div>
         </section>
     </main>
@@ -88,60 +71,11 @@
         <h2 class="text-3xl font-black text-indigo-950 mb-6 uppercase italic">About Padel Hub</h2>
         <div class="prose text-slate-600 space-y-4">
             <p>Padel Hub was designed for enthusiasts who want professional-grade tournament organization without the overhead of complex software.</p>
-            <p>Inspired by world-class clubs, our platform offers a mobile-first experience that works perfectly on the court. Whether you are running a 12-team social mix or a competitive club ranking, we provide the tools to make every match count.</p>
-        </div>
-    </main>
-
-    <main id="page-rules" class="page-content fade-in py-16 px-6 max-w-4xl mx-auto">
-        <h2 class="text-3xl font-black text-indigo-950 mb-8 uppercase italic">Official Rules & Regulations</h2>
-        <div class="grid gap-4">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200">
-                <h3 class="font-bold text-indigo-600 mb-2">01. Scoring System</h3>
-                <p class="text-sm text-slate-600">Matches follow standard tennis scoring (15, 30, 40, Game). In our tournament manager, you input the set scores directly.</p>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-200">
-                <h3 class="font-bold text-indigo-600 mb-2">02. The Serve</h3>
-                <p class="text-sm text-slate-600">Serves must be underhand and struck at or below waist level. The ball must bounce in the opponent's service box.</p>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-200">
-                <h3 class="font-bold text-indigo-600 mb-2">03. The Walls</h3>
-                <p class="text-sm text-slate-600">The ball must bounce on the ground before hitting any wall or fence to be considered "in".</p>
-            </div>
-        </div>
-    </main>
-
-    <main id="page-faqs" class="page-content fade-in py-16 px-6 max-w-3xl mx-auto">
-        <h2 class="text-3xl font-black text-indigo-950 mb-8 uppercase italic">Frequently Asked Questions</h2>
-        <div class="space-y-4">
-            <details class="bg-white p-4 rounded-xl border border-slate-200 cursor-pointer">
-                <summary class="font-bold text-indigo-900">How do I save my tournament history?</summary>
-                <p class="mt-3 text-sm text-slate-600">In the Tournament > History section, use the "Export DB" button to save a file to your phone/PC. You can "Import" this later if you clear your browser cache.</p>
-            </details>
-            <details class="bg-white p-4 rounded-xl border border-slate-200 cursor-pointer">
-                <summary class="font-bold text-indigo-900">How many teams can I host?</summary>
-                <p class="mt-3 text-sm text-slate-600">Our current setup is optimized for a professional 12-team bracket with 3 groups of 4.</p>
-            </details>
         </div>
     </main>
 
     <main id="page-tournaments" class="page-content fade-in">
-        <div id="auth-overlay" class="bg-white p-10 text-center min-h-[60vh] flex flex-col justify-center items-center">
-            <h2 class="text-2xl font-black mb-4 uppercase">Tournament Portal</h2>
-            <p class="text-slate-500 mb-6 text-sm">Please sign in to access your dashboard.</p>
-            <div class="w-full max-w-xs space-y-3">
-                <input type="text" id="username" placeholder="Username" class="w-full p-4 bg-slate-100 rounded-xl outline-none">
-                <input type="password" id="password" placeholder="Password" class="w-full p-4 bg-slate-100 rounded-xl outline-none">
-                <button onclick="handleAuth('login')" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl">Login</button>
-                <button onclick="handleAuth('register')" class="w-full text-indigo-600 font-bold py-2">Create Account</button>
-            </div>
-        </div>
-
-        <div id="tournament-dashboard" class="hidden">
-            <div class="bg-indigo-900 p-4 flex justify-between items-center text-white">
-                <span id="user-display" class="text-xs font-bold uppercase tracking-widest"></span>
-                <button onclick="logout()" class="text-[10px] bg-indigo-800 px-3 py-1 rounded uppercase font-black">Logout</button>
-            </div>
-
+        <div id="tournament-dashboard">
             <nav class="flex bg-white border-b sticky top-[64px] z-30 overflow-x-auto no-scrollbar">
                 <button onclick="showTTab('setup')" id="tt-setup" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">Setup</button>
                 <button onclick="showTTab('groups')" id="tt-groups" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">Scores</button>
@@ -183,28 +117,19 @@
         </div>
     </main>
 
-    <footer class="bg-indigo-950 text-indigo-300 py-12 px-6 text-center border-t border-indigo-900 mt-20">
-        <p class="text-xs uppercase font-black tracking-widest mb-4">Padel Hub Official Manager</p>
-        <div class="flex justify-center gap-6 text-xl mb-6">
-            <i class="fab fa-instagram"></i><i class="fab fa-facebook"></i><i class="fab fa-twitter"></i>
-        </div>
-        <p class="text-[10px]">&copy; 2026 Padel Hub. All rights reserved.</p>
-    </footer>
-
     <script>
         // GLOBAL STATE
-        let currentUser = null;
+        const USER_KEY = "ClubManager";
         let activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false };
 
-        const getDB = () => JSON.parse(localStorage.getItem('padelDB')) || {};
+        const getDB = () => JSON.parse(localStorage.getItem('padelDB')) || { [USER_KEY]: { history: [], active: activeData } };
         const saveDB = (db) => localStorage.setItem('padelDB', JSON.stringify(db));
 
-        // PAGE NAVIGATION
         function showPage(pageId) {
             document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + pageId).classList.add('active');
             window.scrollTo(0, 0);
-            if(pageId === 'tournaments' && currentUser) refreshUI();
+            if(pageId === 'tournaments') refreshUI();
             document.getElementById('mobile-menu').classList.add('hidden');
         }
 
@@ -212,58 +137,25 @@
             document.getElementById('mobile-menu').classList.toggle('hidden');
         }
 
-        // TOURNAMENT TAB NAVIGATION
         function showTTab(tabId) {
             document.querySelectorAll('.tournament-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('t-' + tabId).classList.add('active');
             document.querySelectorAll('#tournament-dashboard nav button').forEach(b => b.classList.remove('border-indigo-600', 'text-indigo-600'));
-            document.getElementById('tt-' + tabId).classList.add('border-indigo-600', 'text-indigo-600');
+            const btn = document.getElementById('tt-' + tabId);
+            if(btn) btn.classList.add('border-indigo-600', 'text-indigo-600');
             if(tabId !== 'setup') refreshUI();
         }
 
-        // AUTH
-        function handleAuth(type) {
-            const u = document.getElementById('username').value.trim();
-            const p = document.getElementById('password').value.trim();
-            const db = getDB();
-            if(!u || !p) return;
-            if(type === 'register') {
-                if(db[u]) return alert("User exists");
-                db[u] = { password: p, history: [], active: activeData };
-                saveDB(db);
-            }
-            if(db[u] && db[u].password === p) {
-                currentUser = u;
-                localStorage.setItem('padelSession', u);
-                loginUI();
-            } else { alert("Error"); }
-        }
-
-        function loginUI() {
-            const db = getDB();
-            activeData = db[currentUser].active;
-            document.getElementById('auth-overlay').classList.add('hidden');
-            document.getElementById('tournament-dashboard').classList.remove('hidden');
-            document.getElementById('user-display').innerText = "Manager: " + currentUser;
-            initInputs();
-            if(activeData.generated) renderMatches();
-            showTTab('setup');
-        }
-
-        function logout() { localStorage.removeItem('padelSession'); location.reload(); }
-
         function sync() {
-            if(!currentUser) return;
             const db = getDB();
-            db[currentUser].active = activeData;
+            db[USER_KEY].active = activeData;
             saveDB(db);
         }
 
-        // LOGIC FROM PREVIOUS VERSIONS (Tournament Engine)
         function initInputs() {
             const cont = document.getElementById('team-inputs'); cont.innerHTML = "";
             activeData.teams.forEach((t, i) => {
-                cont.innerHTML += `<input type="text" value="${t}" onchange="activeData.teams[${i}]=this.value;sync()" placeholder="Team ${i+1}" class="w-full p-4 rounded-xl border border-slate-200 outline-none text-sm font-bold">`;
+                cont.innerHTML += `<input type="text" value="${t}" onchange="activeData.teams[${i}]=this.value;sync()" placeholder="Team ${i+1}" class="w-full p-4 rounded-xl border border-slate-200 outline-none text-sm font-bold shadow-sm">`;
             });
         }
 
@@ -274,7 +166,8 @@
         }
 
         function renderMatches() {
-            const cont = document.getElementById('group-schedule'); cont.innerHTML = "";
+            const cont = document.getElementById('group-schedule'); if(!cont) return;
+            cont.innerHTML = "";
             const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
             activeData.groups.forEach((g, gIdx) => {
                 let h = `<div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="bg-indigo-900 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gIdx)}</div>`;
@@ -321,7 +214,8 @@
         }
 
         function renderTables(res) {
-            const cont = document.getElementById('leaderboard-container'); cont.innerHTML = "";
+            const cont = document.getElementById('leaderboard-container'); if(!cont) return;
+            cont.innerHTML = "";
             res.gStats.forEach((s, i) => {
                 let h = `<div class="bg-white p-4 rounded-xl shadow-sm border"><h3 class="font-black text-[10px] text-indigo-600 mb-2 uppercase">Group ${String.fromCharCode(65+i)}</h3><table class="w-full text-xs">`;
                 s.forEach((t, idx) => h += `<tr class="${idx<2?'font-bold text-green-600':''}"><td class="py-1">${t.name||'---'}</td><td class="text-right">${t.p}pts (${t.gd>0?'+':''}${t.gd})</td></tr>`);
@@ -336,26 +230,27 @@
 
         function renderBracket(qual) {
             const wins = {};
-            const renderM = (id, t1, t2, contId, label) => {
+            const renderM = (id, t1, t2, contId) => {
                 const s = activeData.koScores[id] || ["",""];
                 const w = (t1 && t2 && s[0] !== "" && s[1] !== "") ? (s[0]>s[1]?t1:t2) : null;
                 wins[id] = w;
-                document.getElementById(contId).innerHTML += `<div class="bg-white p-3 rounded-xl border flex items-center justify-between shadow-sm"><span class="text-[10px] font-bold w-20 truncate ${w==t1?'text-green-600':''}">${t1||'TBD'}</span><div class="flex gap-1"><input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-8 h-8 text-center bg-slate-50 border rounded font-bold text-xs"><input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-8 h-8 text-center bg-slate-50 border rounded font-bold text-xs"></div><span class="text-[10px] font-bold w-20 text-right truncate ${w==t2?'text-green-600':''}">${t2||'TBD'}</span></div>`;
+                const el = document.getElementById(contId);
+                if(el) el.innerHTML += `<div class="bg-white p-3 rounded-xl border flex items-center justify-between shadow-sm"><span class="text-[10px] font-bold w-20 truncate ${w==t1?'text-green-600':''}">${t1||'TBD'}</span><div class="flex gap-1"><input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-8 h-8 text-center bg-slate-50 border rounded font-bold text-xs"><input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-8 h-8 text-center bg-slate-50 border rounded font-bold text-xs"></div><span class="text-[10px] font-bold w-20 text-right truncate ${w==t2?'text-green-600':''}">${t2||'TBD'}</span></div>`;
             };
+            
             document.getElementById('qf-bracket').innerHTML = `<p class="text-[9px] font-black text-slate-400 mb-2 uppercase tracking-tighter">Quarter-Finals</p>`;
             renderM("QF1", qual.QF1[0], qual.QF1[1], 'qf-bracket'); renderM("QF2", qual.QF2[0], qual.QF2[1], 'qf-bracket');
             renderM("QF3", qual.QF3[0], qual.QF3[1], 'qf-bracket'); renderM("QF4", qual.QF4[0], qual.QF4[1], 'qf-bracket');
+            
             document.getElementById('sf-bracket').innerHTML = `<p class="text-[9px] font-black text-slate-400 mb-2 uppercase tracking-tighter">Semi-Finals</p>`;
             renderM("SF1", wins.QF1, wins.QF4, 'sf-bracket'); renderM("SF2", wins.QF2, wins.QF3, 'sf-bracket');
+            
             document.getElementById('f-bracket').innerHTML = `<p class="text-[9px] font-black text-slate-400 mb-2 uppercase tracking-tighter">Grand Final</p>`;
             renderM("F", wins.SF1, wins.SF2, 'f-bracket');
             
-            if(wins.F) {
-                activeData.finalWinner = wins.F;
-                document.getElementById('archive-button-container').classList.remove('hidden');
-            } else {
-                document.getElementById('archive-button-container').classList.add('hidden');
-            }
+            const arcBtn = document.getElementById('archive-button-container');
+            if(wins.F) { activeData.finalWinner = wins.F; arcBtn.classList.remove('hidden'); }
+            else { arcBtn.classList.add('hidden'); }
         }
 
         function updateKS(id, t, v) {
@@ -367,17 +262,17 @@
             if(!confirm("Complete and archive?")) return;
             const db = getDB();
             const entry = { id: Date.now(), date: new Date().toLocaleString(), winner: activeData.finalWinner, data: JSON.parse(JSON.stringify(activeData)) };
-            if(!db[currentUser].history) db[currentUser].history = [];
-            db[currentUser].history.unshift(entry);
+            db[USER_KEY].history.unshift(entry);
             activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false };
-            db[currentUser].active = activeData;
+            db[USER_KEY].active = activeData;
             saveDB(db); initInputs(); renderMatches(); refreshUI(); showTTab('history');
         }
 
         function renderHistory() {
-            const db = getDB(); const list = document.getElementById('history-list'); list.innerHTML = "";
-            if(!currentUser || !db[currentUser].history || db[currentUser].history.length === 0) return list.innerHTML = "<p class='text-center text-xs text-slate-400'>No history.</p>";
-            db[currentUser].history.forEach(h => {
+            const db = getDB(); const list = document.getElementById('history-list'); if(!list) return;
+            list.innerHTML = "";
+            if(!db[USER_KEY].history.length) return list.innerHTML = "<p class='text-center text-xs text-slate-400'>No history.</p>";
+            db[USER_KEY].history.forEach(h => {
                 const item = document.createElement('div');
                 item.className = "bg-white p-4 rounded-xl border flex justify-between items-center";
                 item.innerHTML = `<div onclick="viewHistory(${h.id})" class="flex-1 cursor-pointer"><p class="text-[9px] font-black text-slate-400 uppercase">${h.date}</p><p class="font-bold text-slate-800">Winner: ${h.winner}</p></div><button onclick="deleteHistory(${h.id})" class="text-xs text-red-400 font-bold p-2">Delete</button>`;
@@ -386,18 +281,17 @@
         }
 
         function viewHistory(id) {
-            const db = getDB(); const entry = db[currentUser].history.find(x => x.id === id);
+            const db = getDB(); const entry = db[USER_KEY].history.find(x => x.id === id);
             activeData = JSON.parse(JSON.stringify(entry.data));
             refreshUI(); showTTab('finals');
         }
 
         function deleteHistory(id) {
             if(!confirm("Delete?")) return;
-            const db = getDB(); db[currentUser].history = db[currentUser].history.filter(x => x.id !== id);
+            const db = getDB(); db[USER_KEY].history = db[USER_KEY].history.filter(x => x.id !== id);
             saveDB(db); renderHistory();
         }
 
-        // DATABASE PORTABILITY
         function exportDB() {
             const data = localStorage.getItem('padelDB');
             const blob = new Blob([data], { type: 'application/json' });
@@ -416,9 +310,11 @@
         }
 
         window.onload = () => {
-            const session = localStorage.getItem('padelSession');
             const db = getDB();
-            if(session && db[session]) { currentUser = session; loginUI(); }
+            activeData = db[USER_KEY].active;
+            initInputs();
+            if(activeData.generated) renderMatches();
+            showTTab('setup');
         };
     </script>
 </body>
