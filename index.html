@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Court Club</title>
+    <title>The Court Club | Professional Padel Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -24,16 +24,15 @@
 
     <nav class="bg-indigo-950 text-white sticky top-0 z-[100] shadow-xl">
         <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-2 cursor-pointer" onclick="showPage('home')">
-                    <span class="text-2xl">🎾</span>
-                    <span class="font-black text-xl tracking-tighter uppercase">The Court <span class="text-amber-400">Club</span></span>
+            <div class="flex justify-between items-center h-20"> <div class="flex items-center gap-3 cursor-pointer" onclick="showPage('home')">
+                    <img src="logo.png" alt="The Court Club Logo" class="h-12 w-auto object-contain">
+                    <span class="font-black text-xl tracking-tighter uppercase hidden sm:block">The Court <span class="text-amber-400">Club</span></span>
                 </div>
                 
                 <div class="hidden md:flex space-x-8 text-sm font-bold uppercase tracking-widest">
                     <button onclick="showPage('home')" class="hover:text-amber-400 transition">Home</button>
                     <button onclick="showPage('about')" class="hover:text-amber-400 transition">About</button>
-                    <button onclick="showPage('tournaments')" class="hover:text-amber-400 transition">Tournaments</button>
+                    <button onclick="showPage('tournaments')" class="hover:text-amber-400 transition text-amber-400">Tournaments</button>
                     <button onclick="showPage('rules')" class="hover:text-amber-400 transition">Rules</button>
                     <button onclick="showPage('faqs')" class="hover:text-amber-400 transition">FAQs</button>
                 </div>
@@ -60,8 +59,8 @@
             <div class="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1626244101212-39d78a147ad4?q=80&w=2070')] bg-cover bg-center"></div>
             <div class="relative z-10 text-center px-6">
                 <h1 class="text-4xl md:text-6xl font-black text-white mb-4 leading-tight uppercase">Elevate Your <br><span class="text-amber-400">Padel Game</span></h1>
-                <p class="text-indigo-100 mb-8 max-w-md mx-auto">The ultimate platform for club rankings, professional tournament management, and community play.</p>
-                <button onclick="showPage('tournaments')" class="bg-amber-500 hover:bg-amber-400 text-indigo-950 font-black px-8 py-4 rounded-full transition transform hover:scale-105 shadow-lg uppercase tracking-widest text-sm">Organize Now</button>
+                <p class="text-indigo-100 mb-8 max-w-md mx-auto">The premier destination for club rankings, professional tournament management, and the community of **The Court Club**.</p>
+                <button onclick="showPage('tournaments')" class="bg-amber-500 hover:bg-amber-400 text-indigo-950 font-black px-8 py-4 rounded-full transition transform hover:scale-105 shadow-lg uppercase tracking-widest text-sm">Access Tournaments</button>
             </div>
         </section>
 
@@ -69,7 +68,7 @@
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center">
                 <div class="text-3xl mb-4">🏆</div>
                 <h3 class="font-bold text-xl mb-2">Live Brackets</h3>
-                <p class="text-slate-500 text-sm">Automated Quarter-finals, Semi-finals, and Grand Finals logic built-in.</p>
+                <p class="text-slate-500 text-sm">Automated Quarter-finals, Semi-finals, and Grand Finals logic built specifically for club play.</p>
             </div>
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center">
                 <div class="text-3xl mb-4">📊</div>
@@ -79,16 +78,16 @@
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center">
                 <div class="text-3xl mb-4">💾</div>
                 <h3 class="font-bold text-xl mb-2">Data Security</h3>
-                <p class="text-slate-500 text-sm">Export and Import your club history to keep data safe across devices.</p>
+                <p class="text-slate-500 text-sm">Export and Import your club history to keep your rankings safe across any device.</p>
             </div>
         </section>
     </main>
 
     <main id="page-about" class="page-content fade-in py-16 px-6 max-w-3xl mx-auto">
-        <h2 class="text-3xl font-black text-indigo-950 mb-6 uppercase italic">About Padel Hub</h2>
+        <h2 class="text-3xl font-black text-indigo-950 mb-6 uppercase italic">About The Court Club</h2>
         <div class="prose text-slate-600 space-y-4">
-            <p>Padel Hub was designed for enthusiasts who want professional-grade tournament organization without the overhead of complex software.</p>
-            <p>Inspired by world-class clubs, our platform offers a mobile-first experience that works perfectly on the court. Whether you are running a 12-team social mix or a competitive club ranking, we provide the tools to make every match count.</p>
+            <p>**The Court Club** was designed for enthusiasts who want professional-grade tournament organization without the overhead of complex software.</p>
+            <p>Our platform offers a mobile-first experience that works perfectly on the court. Whether you are running a 12-team social mix or a competitive club ranking, we provide the tools to make every match count.</p>
         </div>
     </main>
 
@@ -184,11 +183,14 @@
     </main>
 
     <footer class="bg-indigo-950 text-indigo-300 py-12 px-6 text-center border-t border-indigo-900 mt-20">
-        <p class="text-xs uppercase font-black tracking-widest mb-4">Padel Hub Official Manager</p>
+        <div class="flex flex-col items-center mb-6">
+            <img src="logo.png" alt="The Court Club" class="h-16 w-auto mb-4 opacity-80 grayscale brightness-200">
+            <p class="text-xs uppercase font-black tracking-widest">The Court Club Official Manager</p>
+        </div>
         <div class="flex justify-center gap-6 text-xl mb-6">
             <i class="fab fa-instagram"></i><i class="fab fa-facebook"></i><i class="fab fa-twitter"></i>
         </div>
-        <p class="text-[10px]">&copy; 2026 Padel Hub. All rights reserved.</p>
+        <p class="text-[10px]">&copy; 2026 The Court Club. All rights reserved.</p>
     </footer>
 
     <script>
@@ -236,7 +238,7 @@
                 currentUser = u;
                 localStorage.setItem('padelSession', u);
                 loginUI();
-            } else { alert("Error"); }
+            } else { alert("Error: User not found or incorrect password"); }
         }
 
         function loginUI() {
@@ -259,11 +261,11 @@
             saveDB(db);
         }
 
-        // LOGIC FROM PREVIOUS VERSIONS (Tournament Engine)
+        // TOURNAMENT LOGIC
         function initInputs() {
             const cont = document.getElementById('team-inputs'); cont.innerHTML = "";
             activeData.teams.forEach((t, i) => {
-                cont.innerHTML += `<input type="text" value="${t}" onchange="activeData.teams[${i}]=this.value;sync()" placeholder="Team ${i+1}" class="w-full p-4 rounded-xl border border-slate-200 outline-none text-sm font-bold">`;
+                cont.innerHTML += `<input type="text" value="${t}" onchange="activeData.teams[${i}]=this.value;sync()" placeholder="Team ${i+1}" class="w-full p-4 rounded-xl border border-slate-200 outline-none text-sm font-bold focus:border-indigo-500 transition">`;
             });
         }
 
@@ -277,7 +279,7 @@
             const cont = document.getElementById('group-schedule'); cont.innerHTML = "";
             const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
             activeData.groups.forEach((g, gIdx) => {
-                let h = `<div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="bg-indigo-900 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gIdx)}</div>`;
+                let h = `<div class="bg-white rounded-2xl shadow-sm border overflow-hidden mb-4"><div class="bg-indigo-900 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gIdx)}</div>`;
                 pairs.forEach((p, mIdx) => {
                     const s = activeData.groupScores[`g${gIdx}m${mIdx}`] || ["", ""];
                     h += `<div class="flex items-center justify-between p-3 border-b last:border-0"><span class="text-[10px] font-bold w-20 truncate">${g[p[0]]||'TBD'}</span><div class="flex gap-1"><input type="number" value="${s[0]}" onchange="updateGS(${gIdx},${mIdx},0,this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-lg font-bold"><input type="number" value="${s[1]}" onchange="updateGS(${gIdx},${mIdx},1,this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-lg font-bold"></div><span class="text-[10px] font-bold w-20 text-right truncate">${g[p[1]]||'TBD'}</span></div>`;
@@ -336,7 +338,7 @@
 
         function renderBracket(qual) {
             const wins = {};
-            const renderM = (id, t1, t2, contId, label) => {
+            const renderM = (id, t1, t2, contId) => {
                 const s = activeData.koScores[id] || ["",""];
                 const w = (t1 && t2 && s[0] !== "" && s[1] !== "") ? (s[0]>s[1]?t1:t2) : null;
                 wins[id] = w;
@@ -364,7 +366,7 @@
         }
 
         function archiveTournament() {
-            if(!confirm("Complete and archive?")) return;
+            if(!confirm("Complete and archive this tournament?")) return;
             const db = getDB();
             const entry = { id: Date.now(), date: new Date().toLocaleString(), winner: activeData.finalWinner, data: JSON.parse(JSON.stringify(activeData)) };
             if(!db[currentUser].history) db[currentUser].history = [];
@@ -376,7 +378,7 @@
 
         function renderHistory() {
             const db = getDB(); const list = document.getElementById('history-list'); list.innerHTML = "";
-            if(!currentUser || !db[currentUser].history || db[currentUser].history.length === 0) return list.innerHTML = "<p class='text-center text-xs text-slate-400'>No history.</p>";
+            if(!currentUser || !db[currentUser].history || db[currentUser].history.length === 0) return list.innerHTML = "<p class='text-center text-xs text-slate-400'>No history found.</p>";
             db[currentUser].history.forEach(h => {
                 const item = document.createElement('div');
                 item.className = "bg-white p-4 rounded-xl border flex justify-between items-center";
@@ -392,17 +394,16 @@
         }
 
         function deleteHistory(id) {
-            if(!confirm("Delete?")) return;
+            if(!confirm("Are you sure you want to delete this record?")) return;
             const db = getDB(); db[currentUser].history = db[currentUser].history.filter(x => x.id !== id);
             saveDB(db); renderHistory();
         }
 
-        // DATABASE PORTABILITY
         function exportDB() {
             const data = localStorage.getItem('padelDB');
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `padel_hub_backup.json`;
+            const a = document.createElement('a'); a.href = url; a.download = `the_court_club_backup.json`;
             a.click();
         }
 
