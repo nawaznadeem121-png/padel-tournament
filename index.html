@@ -11,13 +11,16 @@
         .page-content.active { display: block; }
         .tournament-tab { display: none; }
         .tournament-tab.active { display: block; }
+        
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Fix for mobile zoom: Inputs must be at least 16px */
-        input[type="number"], input[type="text"] {
-            font-size: 16px !important;
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* FIX: Prevents mobile zoom and ensures smooth tabbing */
+        input { 
+            font-size: 16px !important; 
+            touch-action: manipulation;
         }
     </style>
 </head>
@@ -26,22 +29,22 @@
     <nav class="bg-indigo-950 text-white sticky top-0 z-[100] shadow-xl">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center h-20">
-                <div class="flex items-center gap-3 cursor-pointer relative z-[110]" onclick="showPage('home')">
-                    <img src="A4D27257-DA3A-4CAF-A4B5-405B2C48E74F_1_102_o.jpeg" alt="Logo" class="h-14 w-auto object-contain">
-                    <span class="font-black text-lg md:text-xl tracking-tighter uppercase whitespace-nowrap">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="showPage('home')">
+                    <img src="A4D27257-DA3A-4CAF-A4B5-405B2C48E74F_1_102_o.jpeg" alt="The Court Club Logo" class="h-12 w-auto object-contain">
+                    <span class="font-black text-lg md:text-xl tracking-tighter uppercase">
                         The Court <span class="text-amber-400">Club</span>
                     </span>
                 </div>
                 
-                <div class="hidden md:flex space-x-6 text-[11px] font-bold uppercase tracking-widest">
+                <div class="hidden md:flex space-x-8 text-sm font-bold uppercase tracking-widest">
                     <button onclick="showPage('home')" class="hover:text-amber-400 transition">Home</button>
-                    <button onclick="showPage('tournaments')" class="text-amber-400 hover:text-white transition">Manager</button>
-                    <button onclick="showPage('winners')" class="hover:text-amber-400 transition">Hall of Fame</button>
-                    <button onclick="showPage('rules')" class="hover:text-amber-400 transition">Rules</button>
+                    <button onclick="showPage('about')" class="hover:text-amber-400 transition">About</button>
+                    <button onclick="showPage('tournaments')" class="text-amber-400 hover:text-white transition">Tournaments</button>
+                    <button onclick="showPage('winners')" class="hover:text-amber-400 transition">Winners</button>
                 </div>
 
-                <div class="md:hidden relative z-[110]">
-                    <button onclick="toggleMobileMenu()" class="text-2xl p-4 -mr-4 focus:outline-none">
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-2xl p-4 focus:outline-none">
                         <i id="menu-icon" class="fas fa-bars"></i>
                     </button>
                 </div>
@@ -50,17 +53,26 @@
         
         <div id="mobile-menu" class="hidden absolute top-full left-0 w-full bg-indigo-950 border-t border-indigo-900 shadow-2xl md:hidden fade-in">
             <div class="flex flex-col p-6 space-y-6 font-bold uppercase text-xs tracking-widest">
-                <button onclick="showPage('home')" class="text-left flex items-center gap-4"><i class="fas fa-home text-amber-400"></i> Home</button>
-                <button onclick="showPage('tournaments')" class="text-left text-amber-400 flex items-center gap-4"><i class="fas fa-trophy"></i> Manager</button>
-                <button onclick="showPage('winners')" class="text-left flex items-center gap-4"><i class="fas fa-medal text-amber-400"></i> Hall of Fame</button>
-                <button onclick="showPage('rules')" class="text-left flex items-center gap-4"><i class="fas fa-book text-amber-400"></i> Rules</button>
+                <button onclick="showPage('home')" class="text-left">Home</button>
+                <button onclick="showPage('about')" class="text-left">About</button>
+                <button onclick="showPage('tournaments')" class="text-left text-amber-400">Tournaments</button>
+                <button onclick="showPage('winners')" class="text-left">Winners</button>
             </div>
         </div>
     </nav>
 
+    <main id="page-home" class="page-content active fade-in">
+        <section class="relative h-[60vh] flex items-center justify-center bg-indigo-900">
+            <div class="text-center px-6">
+                <h1 class="text-4xl md:text-6xl font-black text-white mb-4 uppercase italic">The Court <span class="text-amber-400">Club</span></h1>
+                <button onclick="showPage('tournaments')" class="bg-amber-500 text-indigo-950 font-black px-8 py-4 rounded-full shadow-lg uppercase tracking-widest text-sm">Start Tournament</button>
+            </div>
+        </section>
+    </main>
+
     <main id="page-tournaments" class="page-content fade-in">
         <nav class="flex bg-white border-b sticky top-20 z-30 overflow-x-auto no-scrollbar">
-            <button onclick="showTTab('setup')" id="tt-setup" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">1. Teams</button>
+            <button onclick="showTTab('setup')" id="tt-setup" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">1. Setup</button>
             <button onclick="showTTab('groups')" id="tt-groups" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">2. Scores</button>
             <button onclick="showTTab('rankings')" id="tt-rankings" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">3. Table</button>
             <button onclick="showTTab('finals')" id="tt-finals" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">4. Finals</button>
@@ -69,45 +81,26 @@
         <div class="p-6 max-w-md mx-auto">
             <div id="t-setup" class="tournament-tab active">
                 <div id="team-inputs" class="grid gap-2 mb-6"></div>
-                <button onclick="generateTournament()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase text-xs">Start Tournament</button>
+                <button onclick="generateTournament()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase text-xs">Generate Brackets</button>
             </div>
 
             <div id="t-groups" class="tournament-tab"><div id="group-schedule" class="space-y-6"></div></div>
-            
             <div id="t-rankings" class="tournament-tab"><div id="leaderboard-container" class="space-y-6"></div></div>
-
+            
             <div id="t-finals" class="tournament-tab">
-                <div class="space-y-8">
-                    <div>
-                        <h4 class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1">Quarter-Finals</h4>
-                        <div id="qf-bracket" class="space-y-2"></div>
+                <div id="bracket-container" class="space-y-8">
                     </div>
-                    <div>
-                        <h4 class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1">Semi-Finals</h4>
-                        <div id="sf-bracket" class="space-y-2"></div>
-                    </div>
-                    <div>
-                        <h4 class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1">Grand Final</h4>
-                        <div id="f-bracket" class="space-y-2"></div>
-                    </div>
-                </div>
                 <div id="archive-button-container" class="mt-10 hidden">
-                    <button onclick="postWinnerToCloud()" class="w-full bg-green-600 text-white font-black py-4 rounded-xl shadow-xl uppercase text-xs">Archive Champion</button>
+                    <button onclick="postWinner()" class="w-full bg-green-600 text-white font-black py-4 rounded-xl shadow-xl uppercase text-xs">Archive Champion</button>
                 </div>
             </div>
         </div>
     </main>
 
-    <main id="page-home" class="page-content active fade-in">
-        <section class="relative h-[60vh] flex items-center justify-center bg-indigo-900">
-            <div class="relative z-10 text-center px-6">
-                <h1 class="text-4xl md:text-6xl font-black text-white mb-4 uppercase italic">Padel <span class="text-amber-400">Pro</span></h1>
-                <button onclick="showPage('tournaments')" class="bg-amber-500 text-indigo-950 font-black px-8 py-4 rounded-full shadow-lg uppercase tracking-widest text-sm">Open Manager</button>
-            </div>
-        </section>
+    <main id="page-winners" class="page-content fade-in py-16 px-6 max-w-3xl mx-auto">
+        <h2 class="text-3xl font-black text-indigo-950 uppercase italic mb-8">Hall of Fame</h2>
+        <div id="winner-list" class="space-y-4"></div>
     </main>
-
-    <main id="page-winners" class="page-content fade-in py-16 px-6 max-w-3xl mx-auto"><div id="hall-of-fame-list" class="space-y-4"></div></main>
 
     <script>
         let activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false };
@@ -115,7 +108,9 @@
         function showPage(pageId) {
             document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + pageId).classList.add('active');
+            if(pageId === 'winners') renderWinners();
             if(pageId === 'tournaments') { initInputs(); if(activeData.generated) showTTab('groups'); }
+            window.scrollTo(0, 0);
             toggleMobileMenu(true);
         }
 
@@ -128,7 +123,7 @@
         function showTTab(tabId) {
             document.querySelectorAll('.tournament-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('t-' + tabId).classList.add('active');
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('border-indigo-600', 'text-indigo-600'));
+            document.querySelectorAll('#tt-setup, #tt-groups, #tt-rankings, #tt-finals').forEach(b => b.classList.remove('border-indigo-600', 'text-indigo-600'));
             document.getElementById('tt-' + tabId).classList.add('border-indigo-600', 'text-indigo-600');
             if(tabId !== 'setup') refreshUI();
         }
@@ -154,14 +149,7 @@
                 let h = `<div class="bg-white rounded-2xl shadow-sm border mb-4 overflow-hidden"><div class="bg-indigo-950 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gIdx)}</div>`;
                 pairs.forEach((p, mIdx) => {
                     const s = activeData.groupScores[`g${gIdx}m${mIdx}`] || ["", ""];
-                    h += `<div class="flex items-center justify-between p-3 border-b last:border-0">
-                        <span class="text-[11px] font-bold w-20 truncate">${g[p[0]]||'Team'}</span>
-                        <div class="flex gap-2">
-                            <input type="number" value="${s[0]}" onchange="updateGS(${gIdx},${mIdx},0,this.value)" class="w-10 h-10 text-center bg-slate-100 rounded text-base font-bold">
-                            <input type="number" value="${s[1]}" onchange="updateGS(${gIdx},${mIdx},1,this.value)" class="w-10 h-10 text-center bg-slate-100 rounded text-base font-bold">
-                        </div>
-                        <span class="text-[11px] font-bold w-20 text-right truncate">${g[p[1]]||'Team'}</span>
-                    </div>`;
+                    h += `<div class="flex items-center justify-between p-3 border-b last:border-0"><span class="text-[11px] font-bold w-20 truncate">${g[p[0]]||'Team'}</span><div class="flex gap-2"><input type="number" value="${s[0]}" onchange="updateGS(${gIdx},${mIdx},0,this.value)" class="w-10 h-10 text-center bg-slate-100 rounded text-base font-bold"> <input type="number" value="${s[1]}" onchange="updateGS(${gIdx},${mIdx},1,this.value)" class="w-10 h-10 text-center bg-slate-100 rounded text-base font-bold"></div><span class="text-[11px] font-bold w-20 text-right truncate">${g[p[1]]||'Team'}</span></div>`;
                 });
                 cont.innerHTML += h + `</div>`;
             });
@@ -208,35 +196,41 @@
             });
         }
 
-        /* FIXED BRACKET RENDERING */
+        // FIXED: Combines all KO stages into one HTML string for easy tabbing
         function renderBracket(qual) {
             const wins = {};
-            const createMatchHTML = (id, t1, t2) => {
+            const cont = document.getElementById('bracket-container');
+            let fullHTML = "";
+
+            const createMatch = (id, t1, t2, label) => {
                 const s = activeData.koScores[id] || ["", ""];
-                const w = (t1 && t2 && s[0] !== "" && s[1] !== "") ? (s[0] > s[1] ? t1 : t2) : null;
+                const w = (t1 && t2 && s[0] !== "" && s[1] !== "") ? (s[0]>s[1]?t1:t2) : null;
                 wins[id] = w;
-                return `<div class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm">
-                    <span class="text-[11px] font-bold truncate w-24 ${w == t1 ? 'text-green-600' : ''}">${t1 || 'TBD'}</span>
-                    <div class="flex gap-1">
-                        <input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-100 rounded text-base font-bold">
-                        <input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-100 rounded text-base font-bold">
+                return `
+                <div class="mb-4">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">${label}</p>
+                    <div class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm">
+                        <span class="text-[11px] font-bold truncate w-24 ${w==t1?'text-green-600':''}">${t1||'TBD'}</span>
+                        <div class="flex gap-2">
+                            <input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-100 rounded text-base font-bold">
+                            <input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-100 rounded text-base font-bold">
+                        </div>
+                        <span class="text-[11px] font-bold text-right truncate w-24 ${w==t2?'text-green-600':''}">${t2||'TBD'}</span>
                     </div>
-                    <span class="text-[11px] font-bold text-right truncate w-24 ${w == t2 ? 'text-green-600' : ''}">${t2 || 'TBD'}</span>
                 </div>`;
             };
 
-            // Build QF
-            let qfH = createMatchHTML("QF1", qual.QF1[0], qual.QF1[1]) + createMatchHTML("QF2", qual.QF2[0], qual.QF2[1]) + 
-                      createMatchHTML("QF3", qual.QF3[0], qual.QF3[1]) + createMatchHTML("QF4", qual.QF4[0], qual.QF4[1]);
-            document.getElementById('qf-bracket').innerHTML = qfH;
+            fullHTML += createMatch("QF1", qual.QF1[0], qual.QF1[1], "Quarter Final 1");
+            fullHTML += createMatch("QF2", qual.QF2[0], qual.QF2[1], "Quarter Final 2");
+            fullHTML += createMatch("QF3", qual.QF3[0], qual.QF3[1], "Quarter Final 3");
+            fullHTML += createMatch("QF4", qual.QF4[0], qual.QF4[1], "Quarter Final 4");
+            
+            fullHTML += createMatch("SF1", wins.QF1, wins.QF4, "Semi Final 1");
+            fullHTML += createMatch("SF2", wins.QF2, wins.QF3, "Semi Final 2");
+            
+            fullHTML += createMatch("F", wins.SF1, wins.SF2, "The Grand Final");
 
-            // Build SF
-            let sfH = createMatchHTML("SF1", wins.QF1, wins.QF4) + createMatchHTML("SF2", wins.QF2, wins.QF3);
-            document.getElementById('sf-bracket').innerHTML = sfH;
-
-            // Build Final
-            let fH = createMatchHTML("F", wins.SF1, wins.SF2);
-            document.getElementById('f-bracket').innerHTML = fH;
+            cont.innerHTML = fullHTML;
 
             if(wins.F) { 
                 activeData.finalWinner = wins.F; 
@@ -248,6 +242,23 @@
             if(!activeData.koScores[id]) activeData.koScores[id] = ["",""]; 
             activeData.koScores[id][t] = v === "" ? "" : parseInt(v); 
             refreshUI(); 
+        }
+
+        function postWinner() {
+            let winners = JSON.parse(localStorage.getItem('cc_winners')) || [];
+            winners.unshift({ team: activeData.finalWinner, date: new Date().toLocaleDateString() });
+            localStorage.setItem('cc_winners', JSON.stringify(winners));
+            showPage('winners');
+        }
+
+        function renderWinners() {
+            const list = document.getElementById('winner-list');
+            const data = JSON.parse(localStorage.getItem('cc_winners')) || [];
+            list.innerHTML = data.map(w => `
+                <div class="bg-white p-6 rounded-3xl border flex justify-between items-center shadow-sm">
+                    <div><p class="text-[9px] font-black text-amber-500 uppercase">${w.date}</p><h3 class="text-xl font-black text-indigo-950 uppercase">${w.team}</h3></div>
+                    <div class="text-3xl">🏆</div>
+                </div>`).join('') || "<p class='text-center text-slate-400'>No winners yet.</p>";
         }
     </script>
 </body>
