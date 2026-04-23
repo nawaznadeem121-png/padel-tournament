@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>The Court Club</title>
+    <title>Padel Hub | Tournament Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,7 +11,6 @@
         .tournament-tab.active { display: block; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
 
-        /* Prevents mobile zoom and ensures smooth focus transitions */
         input { 
             font-size: 16px !important; 
             touch-action: manipulation;
@@ -25,10 +24,15 @@
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
 
-    <header class="bg-indigo-950 text-white p-4 shadow-md text-center">
-        <div class="flex items-center justify-center gap-2">
-            <span class="text-2xl">🎾</span>
-            <span class="font-black text-xl tracking-tighter uppercase">The Court Club</span>
+    <header class="bg-indigo-950 text-white px-4 py-3 shadow-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="logo.png" alt="Padel Hub Logo" class="h-10 w-auto object-contain">
+                <span class="font-black text-xl tracking-tighter uppercase">Padel<span class="text-amber-400">Hub</span></span>
+            </div>
+            <div class="hidden md:block text-[10px] font-bold uppercase tracking-widest text-indigo-300">
+                Tournament Manager v2.0
+            </div>
         </div>
     </header>
 
@@ -223,7 +227,6 @@
                        createMatch("QF3", qual.QF3[0], qual.QF3[1], "Quarter Final 3") +
                        createMatch("QF4", qual.QF4[0], qual.QF4[1], "Quarter Final 4");
 
-            // SF requires winners of QF
             html += `<div class="py-4 border-t my-4"><p class="text-center text-[10px] font-black text-indigo-400 uppercase tracking-widest">Semi-Finals</p></div>`;
             html += createMatch("SF1", wins.QF1, wins.QF4, "Semi Final 1") +
                     createMatch("SF2", wins.QF2, wins.QF3, "Semi Final 2");
@@ -242,7 +245,6 @@
             if(!activeData.koScores[id]) activeData.koScores[id] = ["",""];
             activeData.koScores[id][t] = v === "" ? "" : parseInt(v); 
             sync(); 
-            // Note: Full UI refresh only happens on tab switch to prevent jumping/refocus issues
         }
 
         function archiveTournament() {
@@ -309,7 +311,7 @@
             const reader = new FileReader();
             reader.onload = function(ev) {
                 try {
-                    JSON.parse(ev.target.result); // Validate JSON
+                    JSON.parse(ev.target.result); 
                     localStorage.setItem('padelDB', ev.target.result);
                     location.reload();
                 } catch(e) { alert("Invalid backup file."); }
