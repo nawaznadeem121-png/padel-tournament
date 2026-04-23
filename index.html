@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The naz Clubsss| Global Padel Manager</title>
+    <title>The Court Club | Global Padel Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -57,45 +57,33 @@
     </nav>
 
     <main id="page-home" class="page-content active fade-in">
-        <section class="relative h-[50vh] flex items-center justify-center bg-indigo-900 overflow-hidden">
-            <div class="absolute inset-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1626244101212-39d78a147ad4?q=80&w=2070')] bg-cover bg-center"></div>
+        <section class="relative h-[60vh] flex items-center justify-center bg-indigo-900 overflow-hidden">
+            <div class="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1626244101212-39d78a147ad4?q=80&w=2070')] bg-cover bg-center"></div>
             <div class="relative z-10 text-center px-6">
-                <h1 class="text-4xl md:text-6xl font-black text-white mb-4 uppercase">The Court <span class="text-amber-400">Club</span></h1>
-                <p class="text-indigo-100 mb-8 max-w-md mx-auto text-sm">Professional tournament management for your local Padel community.</p>
-                <button onclick="showPage('tournaments')" class="bg-amber-500 text-indigo-950 font-black px-8 py-4 rounded-full shadow-lg uppercase tracking-widest text-sm">Open Tournament Manager</button>
+                <h1 class="text-4xl md:text-6xl font-black text-white mb-4 uppercase leading-tight">Elevate Your <br><span class="text-amber-400">Padel Game</span></h1>
+                <button onclick="showPage('tournaments')" class="bg-amber-500 text-indigo-950 font-black px-8 py-4 rounded-full shadow-lg uppercase tracking-widest text-sm mt-4">Start Tournament</button>
             </div>
         </section>
     </main>
 
     <main id="page-tournaments" class="page-content fade-in">
-        <div id="tournament-dashboard">
-            <nav class="flex bg-white border-b sticky top-20 z-30 overflow-x-auto no-scrollbar">
-                <button onclick="showTTab('setup')" id="tt-setup" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">1. Setup</button>
-                <button onclick="showTTab('groups')" id="tt-groups" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">2. Scores</button>
-                <button onclick="showTTab('rankings')" id="tt-rankings" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">3. Standings</button>
-                <button onclick="showTTab('finals')" id="tt-finals" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">4. Finals</button>
-            </nav>
-
-            <div class="p-6 max-w-md mx-auto">
-                <div id="t-setup" class="tournament-tab active">
-                    <h3 class="font-black text-xs uppercase mb-4 text-slate-400">Entry List (12 Teams)</h3>
-                    <div id="team-inputs" class="grid gap-2"></div>
-                    <button onclick="generateTournament()" class="w-full mt-6 bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-sm tracking-widest">Start Tournament</button>
-                </div>
-
-                <div id="t-groups" class="tournament-tab"><div id="group-schedule" class="space-y-6"></div></div>
-                <div id="t-rankings" class="tournament-tab">
-                    <div id="leaderboard-container" class="space-y-6"></div>
-                    <div id="wildcard-list" class="mt-6 bg-amber-50 p-4 rounded-xl border border-amber-200"></div>
-                </div>
-
-                <div id="t-finals" class="tournament-tab">
-                    <div id="qf-bracket" class="space-y-3 mb-8"></div>
-                    <div id="sf-bracket" class="space-y-3 mb-8"></div>
-                    <div id="f-bracket" class="space-y-3"></div>
-                    <div id="archive-button-container" class="mt-10 hidden">
-                        <button id="post-btn" onclick="postWinnerToCloud()" class="w-full bg-green-600 text-white font-black py-4 rounded-xl shadow-xl uppercase tracking-widest">Post Winner to Hall of Fame</button>
-                    </div>
+        <nav class="flex bg-white border-b sticky top-20 z-30 overflow-x-auto no-scrollbar">
+            <button onclick="showTTab('setup')" id="tt-setup" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">1. Setup</button>
+            <button onclick="showTTab('groups')" id="tt-groups" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">2. Scores</button>
+            <button onclick="showTTab('rankings')" id="tt-rankings" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">3. Standings</button>
+            <button onclick="showTTab('finals')" id="tt-finals" class="flex-none px-6 py-4 text-[10px] font-black uppercase border-b-2 border-transparent">4. Finals</button>
+        </nav>
+        <div class="p-6 max-w-md mx-auto">
+            <div id="t-setup" class="tournament-tab active">
+                <div id="team-inputs" class="grid gap-2 mb-6"></div>
+                <button onclick="generateTournament()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase text-xs">Generate Brackets</button>
+            </div>
+            <div id="t-groups" class="tournament-tab"><div id="group-schedule" class="space-y-6"></div></div>
+            <div id="t-rankings" class="tournament-tab"><div id="leaderboard-container" class="space-y-6"></div></div>
+            <div id="t-finals" class="tournament-tab">
+                <div id="qf-bracket"></div><div id="sf-bracket"></div><div id="f-bracket"></div>
+                <div id="archive-button-container" class="mt-10 hidden">
+                    <button id="post-btn" onclick="postWinnerToCloud()" class="w-full bg-green-600 text-white font-black py-4 rounded-xl shadow-xl uppercase tracking-widest text-xs">Post Winner to Hall of Fame</button>
                 </div>
             </div>
         </div>
@@ -104,16 +92,11 @@
     <main id="page-winners" class="page-content fade-in py-16 px-6 max-w-3xl mx-auto">
         <div class="text-center mb-12">
             <h2 class="text-4xl font-black text-indigo-950 uppercase italic mb-2">Hall of Fame</h2>
-            <p class="text-slate-500 uppercase text-[10px] tracking-widest font-bold">Public History of The Court Club Champions</p>
+            <p class="text-slate-500 uppercase text-[10px] tracking-widest font-bold">Public History of Champions</p>
         </div>
         <div id="hall-of-fame-list" class="space-y-4">
-            <div class="text-center py-10 text-slate-400">Loading champions...</div>
+            <div class="text-center py-10 text-slate-400">Connecting to database...</div>
         </div>
-    </main>
-
-    <main id="page-rules" class="page-content fade-in py-16 px-6 max-w-3xl mx-auto">
-        <h2 class="text-2xl font-black uppercase mb-6">Tournament Rules</h2>
-        <p class="text-slate-600 text-sm">3 Groups of 4 teams. Best 2 and best 3rd places qualify for KOs.</p>
     </main>
 
     <footer class="bg-indigo-950 text-indigo-300 py-12 px-6 text-center mt-20">
@@ -121,16 +104,22 @@
     </footer>
 
     <script>
-        // --- SUPABASE CONFIGURATION ---
-        // Replace these with your actual Supabase project details to make it public!
-        const SUPABASE_URL = 'PASTE_YOUR_URL_HERE';
-        const SUPABASE_KEY = 'PASTE_YOUR_KEY_HERE';
-        const supabase = (SUPABASE_URL !== 'PASTE_YOUR_URL_HERE') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+        // --- DATABASE CONFIGURATION ---
+        const SB_URL = 'PASTE_YOUR_SUPABASE_URL'; 
+        const SB_KEY = 'PASTE_YOUR_SUPABASE_ANON_KEY';
+        let dbClient = null;
 
-        // STATE
+        // Safely Initialize Supabase
+        try {
+            if (SB_URL.startsWith('http')) {
+                dbClient = supabase.createClient(SB_URL, SB_KEY);
+            }
+        } catch (e) { console.error("Database not connected"); }
+
+        // APP STATE
         let activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false };
 
-        // NAVIGATION
+        // NAVIGATION LOGIC
         function showPage(pageId) {
             document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + pageId).classList.add('active');
@@ -143,45 +132,43 @@
         function toggleMobileMenu(forceClose = false) {
             const menu = document.getElementById('mobile-menu');
             const icon = document.getElementById('menu-icon');
-            if(forceClose) {
+            if(forceClose || !menu.classList.contains('hidden')) {
                 menu.classList.add('hidden');
                 icon.className = 'fas fa-bars';
             } else {
-                const isHidden = menu.classList.toggle('hidden');
-                icon.className = isHidden ? 'fas fa-bars' : 'fas fa-times';
+                menu.classList.remove('hidden');
+                icon.className = 'fas fa-times';
             }
         }
 
         function showTTab(tabId) {
             document.querySelectorAll('.tournament-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('t-' + tabId).classList.add('active');
-            document.querySelectorAll('#tournament-dashboard nav button').forEach(b => b.classList.remove('border-indigo-600', 'text-indigo-600'));
-            document.getElementById('tt-' + tabId).classList.add('border-indigo-600', 'text-indigo-600');
             if(tabId !== 'setup') refreshUI();
         }
 
         // TOURNAMENT ENGINE
         function initInputs() {
-            const cont = document.getElementById('team-inputs'); cont.innerHTML = "";
-            activeData.teams.forEach((t, i) => {
-                cont.innerHTML += `<input type="text" value="${t}" onchange="activeData.teams[${i}]=this.value" placeholder="Team ${i+1}" class="w-full p-4 rounded-xl border border-slate-200 outline-none text-sm font-bold">`;
-            });
+            const cont = document.getElementById('team-inputs'); if(!cont.innerHTML) {
+                activeData.teams.forEach((t, i) => {
+                    cont.innerHTML += `<input type="text" onchange="activeData.teams[${i}]=this.value" placeholder="Team ${i+1}" class="w-full p-4 rounded-xl border border-slate-200 outline-none text-sm font-bold">`;
+                });
+            }
         }
 
         function generateTournament() {
             activeData.groups = [activeData.teams.slice(0,4), activeData.teams.slice(4,8), activeData.teams.slice(8,12)];
-            activeData.generated = true; activeData.groupScores = {}; activeData.koScores = {};
-            renderMatches(); showTTab('groups');
+            activeData.generated = true; renderMatches(); showTTab('groups');
         }
 
         function renderMatches() {
             const cont = document.getElementById('group-schedule'); cont.innerHTML = "";
             const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
             activeData.groups.forEach((g, gIdx) => {
-                let h = `<div class="bg-white rounded-2xl shadow-sm border mb-4 overflow-hidden"><div class="bg-indigo-950 text-white px-4 py-2 text-[10px] font-black">Group ${String.fromCharCode(65+gIdx)}</div>`;
+                let h = `<div class="bg-white rounded-2xl shadow-sm border mb-4 overflow-hidden"><div class="bg-indigo-950 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gIdx)}</div>`;
                 pairs.forEach((p, mIdx) => {
                     const s = activeData.groupScores[`g${gIdx}m${mIdx}`] || ["", ""];
-                    h += `<div class="flex items-center justify-between p-3 border-b last:border-0"><span class="text-[10px] font-bold w-20 truncate">${g[p[0]]}</span><div class="flex gap-2"><input type="number" value="${s[0]}" onchange="updateGS(${gIdx},${mIdx},0,this.value)" class="w-8 h-8 text-center bg-slate-100 rounded"> <input type="number" value="${s[1]}" onchange="updateGS(${gIdx},${mIdx},1,this.value)" class="w-8 h-8 text-center bg-slate-100 rounded"></div><span class="text-[10px] font-bold w-20 text-right truncate">${g[p[1]]}</span></div>`;
+                    h += `<div class="flex items-center justify-between p-3 border-b last:border-0"><span class="text-[10px] font-bold w-20 truncate">${g[p[0]]||'Team'}</span><div class="flex gap-2"><input type="number" value="${s[0]}" onchange="updateGS(${gIdx},${mIdx},0,this.value)" class="w-8 h-8 text-center bg-slate-100 rounded"> <input type="number" value="${s[1]}" onchange="updateGS(${gIdx},${mIdx},1,this.value)" class="w-8 h-8 text-center bg-slate-100 rounded"></div><span class="text-[10px] font-bold w-20 text-right truncate">${g[p[1]]||'Team'}</span></div>`;
                 });
                 cont.innerHTML += h + `</div>`;
             });
@@ -212,8 +199,7 @@
                 stats.sort((a,b) => b.p - a.p || b.gd - a.gd);
                 gStats.push(stats); thirds.push({...stats[2], g: String.fromCharCode(65+i)});
             });
-            thirds.sort((a,b) => b.p - a.p || b.gd - a.gd);
-            const wc = thirds.slice(0,2);
+            const wc = thirds.sort((a,b) => b.p - a.p || b.gd - a.gd).slice(0,2);
             return { gStats, wc, qual: { 
                 QF1: [gStats[0][0].name, wc[1].name], QF2: [gStats[1][0].name, wc[0].name], 
                 QF3: [gStats[2][0].name, gStats[0][1].name], QF4: [gStats[1][1].name, gStats[2][1].name] 
@@ -223,72 +209,4 @@
         function renderTables(res) {
             const cont = document.getElementById('leaderboard-container'); cont.innerHTML = "";
             res.gStats.forEach((s, i) => {
-                let h = `<div class="bg-white p-4 rounded-xl border mb-4"><h3 class="font-black text-[10px] uppercase text-indigo-600 mb-2">Group ${String.fromCharCode(65+i)}</h3><table class="w-full text-xs">`;
-                s.forEach((t, idx) => h += `<tr class="${idx<2?'text-green-600 font-bold':''}"><td class="py-1">${t.name}</td><td class="text-right">${t.p}pts (${t.gd>0?'+':''}${t.gd})</td></tr>`);
-                cont.innerHTML += h + `</table></div>`;
-            });
-        }
-
-        function renderBracket(qual) {
-            const wins = {};
-            const renderM = (id, t1, t2, contId) => {
-                const s = activeData.koScores[id] || ["",""];
-                const w = (t1 && t2 && s[0] !== "" && s[1] !== "") ? (s[0]>s[1]?t1:t2) : null;
-                wins[id] = w;
-                document.getElementById(contId).innerHTML += `<div class="bg-white p-3 rounded-lg border flex justify-between items-center mb-2"><span class="text-[10px] font-bold truncate ${w==t1?'text-green-600':''}">${t1||'TBD'}</span><div class="flex gap-1"><input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-8 h-8 text-center bg-slate-100 rounded"> <input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-8 h-8 text-center bg-slate-100 rounded"></div><span class="text-[10px] font-bold text-right truncate ${w==t2?'text-green-600':''}">${t2||'TBD'}</span></div>`;
-            };
-            document.getElementById('qf-bracket').innerHTML = ""; renderM("QF1", qual.QF1[0], qual.QF1[1], 'qf-bracket'); renderM("QF2", qual.QF2[0], qual.QF2[1], 'qf-bracket'); renderM("QF3", qual.QF3[0], qual.QF3[1], 'qf-bracket'); renderM("QF4", qual.QF4[0], qual.QF4[1], 'qf-bracket');
-            document.getElementById('sf-bracket').innerHTML = ""; renderM("SF1", wins.QF1, wins.QF4, 'sf-bracket'); renderM("SF2", wins.QF2, wins.QF3, 'sf-bracket');
-            document.getElementById('f-bracket').innerHTML = ""; renderM("F", wins.SF1, wins.SF2, 'f-bracket');
-            if(wins.F) { activeData.finalWinner = wins.F; document.getElementById('archive-button-container').classList.remove('hidden'); }
-        }
-
-        function updateKS(id, t, v) { if(!activeData.koScores[id]) activeData.koScores[id] = ["",""]; activeData.koScores[id][t] = v === "" ? "" : parseInt(v); refreshUI(); }
-
-        // --- PUBLIC DATA POSTING ---
-        async function postWinnerToCloud() {
-            const btn = document.getElementById('post-btn');
-            btn.innerText = "POSTING...";
-            
-            const winnerData = {
-                team_name: activeData.finalWinner,
-                won_at: new Date().toISOString()
-            };
-
-            // If Supabase is connected, send it to the cloud. 
-            // If not, we'll simulate it for now so you can see the UI.
-            if(supabase) {
-                const { error } = await supabase.from('winners').insert([winnerData]);
-                if(error) alert("Error posting: " + error.message);
-                else { alert("Winner Posted Globally!"); showPage('winners'); }
-            } else {
-                // LOCAL FALLBACK (until you paste your Supabase keys)
-                let localHistory = JSON.parse(localStorage.getItem('temp_winners')) || [];
-                localHistory.unshift({ team_name: activeData.finalWinner, won_at: new Date().toISOString() });
-                localStorage.setItem('temp_winners', JSON.stringify(localHistory));
-                alert("Simulated Post! (Paste Supabase keys to make this global)");
-                showPage('winners');
-            }
-            btn.innerText = "COMPLETE & POST RESULT";
-        }
-
-        async function fetchWinners() {
-            const list = document.getElementById('hall-of-fame-list');
-            let data = [];
-            
-            if(supabase) {
-                const { data: cloudData, error } = await supabase.from('winners').select('*').order('won_at', { ascending: false });
-                data = cloudData || [];
-            } else {
-                data = JSON.parse(localStorage.getItem('temp_winners')) || [];
-            }
-
-            list.innerHTML = data.length ? "" : "<div class='text-center py-10 text-slate-400'>No champions yet.</div>";
-            data.forEach(w => {
-                const date = new Date(w.won_at).toLocaleDateString();
-                list.innerHTML += `<div class="bg-white p-6 rounded-3xl border flex justify-between items-center shadow-sm"><div><p class="text-[9px] font-black text-amber-500 uppercase">${date}</p><h3 class="text-xl font-black text-indigo-950 uppercase">${w.team_name}</h3></div><div class="text-3xl">🏆</div></div>`;
-            });
-        }
-    </script>
-</body>
-</html>
+                let h = `
