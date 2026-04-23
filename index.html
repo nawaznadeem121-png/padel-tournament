@@ -10,10 +10,7 @@
         .tab-content.active { display: block; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
-        @keyframes flash {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.05); }
-        }
+        @keyframes flash { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.05); } }
         .animate-champion { animation: flash 0.8s ease-in-out infinite; }
 
         .particle {
@@ -32,11 +29,9 @@
                 <h1 class="text-2xl font-bold text-slate-800">Padel Pro Manager</h1>
                 <p class="text-slate-500 text-sm">Sign in to save your tournaments</p>
             </div>
-            
-            <div id="auth-form" class="space-y-4">
+            <div class="space-y-4">
                 <input type="text" id="username" placeholder="Username" class="w-full p-4 bg-slate-100 rounded-xl outline-none border-2 border-transparent focus:border-indigo-500">
                 <input type="password" id="password" placeholder="Password" class="w-full p-4 bg-slate-100 rounded-xl outline-none border-2 border-transparent focus:border-indigo-500">
-                
                 <div class="flex gap-2 pt-2">
                     <button onclick="handleAuth('login')" class="flex-1 bg-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">Login</button>
                     <button onclick="handleAuth('register')" class="flex-1 bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">Register</button>
@@ -66,7 +61,6 @@
     </nav>
 
     <main class="p-4 max-w-md mx-auto">
-
         <section id="setup" class="tab-content active">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="font-bold text-lg">Active Tournament</h2>
@@ -76,14 +70,8 @@
             <button onclick="generateTournament()" class="w-full mt-6 bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg">Start New Tournament</button>
         </section>
 
-        <section id="groups" class="tab-content">
-            <div id="group-schedule" class="space-y-6"></div>
-        </section>
-
-        <section id="rankings" class="tab-content">
-            <div id="leaderboard-container" class="space-y-6"></div>
-            <div id="wildcard-list" class="mt-4 bg-amber-50 p-4 rounded-xl border border-amber-100"></div>
-        </section>
+        <section id="groups" class="tab-content"><div id="group-schedule" class="space-y-6"></div></section>
+        <section id="rankings" class="tab-content"><div id="leaderboard-container" class="space-y-6"></div><div id="wildcard-list" class="mt-4 bg-amber-50 p-4 rounded-xl border border-amber-100"></div></section>
 
         <section id="knockouts" class="tab-content">
             <div id="bracket-container" class="space-y-8">
@@ -92,43 +80,39 @@
                 <div><h3 class="font-black text-indigo-900 mb-3 text-xs tracking-widest uppercase">The Grand Final</h3><div id="f-bracket" class="space-y-3"></div></div>
             </div>
             <div id="archive-button-container" class="mt-10 hidden">
-                <button onclick="archiveTournament()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl animate-bounce">SAVE TO HISTORY & ARCHIVE</button>
+                <button onclick="archiveTournament()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl animate-bounce">SAVE TO HISTORY & RESET</button>
             </div>
         </section>
 
         <section id="history" class="tab-content">
             <h2 class="font-bold text-lg mb-4">Past Tournaments</h2>
-            <div id="history-list" class="space-y-3">
-                </div>
+            <div id="history-list" class="space-y-3"></div>
         </section>
 
         <section id="winner" class="tab-content text-center pt-20">
             <div class="text-6xl mb-4">🏆</div>
             <div id="champion-name-display" class="text-4xl font-black text-amber-500 animate-champion uppercase tracking-tighter"></div>
             <p class="text-slate-400 mt-4 font-bold text-sm">CHAMPION DE PADEL</p>
-            <button onclick="showTab('knockouts')" class="mt-10 text-indigo-600 font-bold underline">Return to Details</button>
         </section>
     </main>
 
     <div id="particle-container"></div>
 
     <script>
-        // Global State
+        // Data Structures
         let currentUser = null;
         let activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false };
         let accounts = JSON.parse(localStorage.getItem('padelAccounts')) || {};
 
-        // --- AUTH LOGIC ---
+        // --- AUTH & SESSION FIX ---
         function handleAuth(type) {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
             const msg = document.getElementById('auth-msg');
 
-            if(!u || !p) { msg.innerText = "Please fill all fields"; return; }
-
             if(type === 'register') {
                 if(accounts[u]) { msg.innerText = "Username exists"; return; }
-                accounts[u] = { password: p, history: [], active: activeData };
+                accounts[u] = { password: p, history: [], active: JSON.parse(JSON.stringify(activeData)) };
                 saveAccounts();
                 loginUser(u);
             } else {
@@ -139,62 +123,56 @@
 
         function loginUser(u) {
             currentUser = u;
+            localStorage.setItem('padelSession', u); // PERSIST SESSION
             document.getElementById('auth-overlay').classList.add('hidden');
             document.getElementById('user-display').innerText = u;
-            activeData = accounts[u].active || activeData;
+            activeData = accounts[u].active;
             initSetupInputs();
             if(activeData.generated) { renderGroupMatches(); refreshUI(); }
             showTab('setup');
         }
 
-        function logout() { location.reload(); }
-        function saveAccounts() { localStorage.setItem('padelAccounts', JSON.stringify(accounts)); }
-        function syncActive() { if(currentUser) { accounts[currentUser].active = activeData; saveAccounts(); } }
+        function logout() {
+            localStorage.removeItem('padelSession');
+            location.reload();
+        }
 
-        // --- TOURNAMENT LOGIC ---
+        function saveAccounts() { localStorage.setItem('padelAccounts', JSON.stringify(accounts)); }
+        
+        function syncActive() { 
+            if(currentUser) { 
+                accounts[currentUser].active = activeData; 
+                saveAccounts(); 
+            } 
+        }
+
+        // --- CORE TOURNAMENT LOGIC ---
         function initSetupInputs() {
             const container = document.getElementById('team-inputs');
             container.innerHTML = "";
             activeData.teams.forEach((name, i) => {
                 const input = document.createElement('input');
-                input.type = "text";
-                input.value = name;
-                input.placeholder = `Team ${i+1}`;
-                input.className = "w-full p-3 rounded-xl border border-slate-200 shadow-sm outline-none focus:border-indigo-500";
+                input.type = "text"; input.value = name; input.placeholder = `Team ${i+1}`;
+                input.className = "w-full p-3 rounded-xl border border-slate-200 outline-none";
                 input.onchange = (e) => { activeData.teams[i] = e.target.value; syncActive(); };
                 container.appendChild(input);
             });
         }
 
         function generateTournament() {
-            if(!currentUser) return;
             activeData.groups = [activeData.teams.slice(0,4), activeData.teams.slice(4,8), activeData.teams.slice(8,12)];
-            activeData.generated = true;
-            activeData.finalWinner = null;
-            activeData.koScores = {};
-            activeData.groupScores = {};
-            syncActive();
-            renderGroupMatches();
-            showTab('groups');
+            activeData.generated = true; activeData.finalWinner = null; activeData.koScores = {}; activeData.groupScores = {};
+            syncActive(); renderGroupMatches(); showTab('groups');
         }
 
         function renderGroupMatches() {
-            const container = document.getElementById('group-schedule');
-            container.innerHTML = "";
+            const container = document.getElementById('group-schedule'); container.innerHTML = "";
             const pairings = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
             activeData.groups.forEach((group, gIdx) => {
-                let html = `<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-4">
-                    <div class="bg-indigo-900 text-white px-4 py-2 text-xs font-black uppercase">Group ${String.fromCharCode(65+gIdx)}</div>`;
+                let html = `<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-4"><div class="bg-indigo-900 text-white px-4 py-2 text-xs font-black uppercase">Group ${String.fromCharCode(65+gIdx)}</div>`;
                 pairings.forEach((p, mIdx) => {
                     const s = activeData.groupScores[`g${gIdx}m${mIdx}`] || ["", ""];
-                    html += `<div class="flex items-center justify-between p-3 border-b border-slate-50 last:border-0">
-                        <span class="text-[11px] font-bold w-24 truncate">${group[p[0]] || 'TBD'}</span>
-                        <div class="flex gap-1">
-                            <input type="number" value="${s[0]}" onchange="saveScore(${gIdx},${mIdx},0,this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-lg font-bold">
-                            <input type="number" value="${s[1]}" onchange="saveScore(${gIdx},${mIdx},1,this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-lg font-bold">
-                        </div>
-                        <span class="text-[11px] font-bold w-24 text-right truncate">${group[p[1]] || 'TBD'}</span>
-                    </div>`;
+                    html += `<div class="flex items-center justify-between p-3 border-b border-slate-50 last:border-0"><span class="text-[11px] font-bold w-24 truncate">${group[p[0]] || 'TBD'}</span><div class="flex gap-1"><input type="number" value="${s[0]}" onchange="saveScore(${gIdx},${mIdx},0,this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-lg font-bold"><input type="number" value="${s[1]}" onchange="saveScore(${gIdx},${mIdx},1,this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-lg font-bold"></div><span class="text-[11px] font-bold w-24 text-right truncate">${group[p[1]] || 'TBD'}</span></div>`;
                 });
                 container.innerHTML += html + `</div>`;
             });
@@ -208,17 +186,15 @@
         }
 
         function refreshUI() {
-            const results = calculateLogic();
-            renderTables(results);
-            renderBracket(results.qualified);
+            const res = calculateLogic();
+            renderTables(res);
+            renderBracket(res.qualified);
             renderHistory();
         }
 
         function calculateLogic() {
-            let groupStats = [];
-            let allThirds = [];
+            let groupStats = []; let allThirds = [];
             const pairings = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
-
             activeData.groups.forEach((group, gIdx) => {
                 let stats = group.map(name => ({ name, p: 0, gd: 0 }));
                 pairings.forEach((p, mIdx) => {
@@ -232,67 +208,38 @@
                 groupStats.push(stats);
                 allThirds.push({...stats[2], group: String.fromCharCode(65+gIdx)});
             });
-
             allThirds.sort((a,b) => b.p - a.p || b.gd - a.gd);
             const wc = allThirds.slice(0, 2);
-
-            return {
-                groupStats, wildcards: wc,
-                qualified: {
-                    QF1: { t1: groupStats[0][0].name, t2: wc[1].name },
-                    QF2: { t1: groupStats[1][0].name, t2: wc[0].name },
-                    QF3: { t1: groupStats[2][0].name, t2: groupStats[0][1].name },
-                    QF4: { t1: groupStats[1][1].name, t2: groupStats[2][1].name }
-                }
-            };
+            return { groupStats, wildcards: wc, qualified: { QF1: { t1: groupStats[0][0].name, t2: wc[1].name }, QF2: { t1: groupStats[1][0].name, t2: wc[0].name }, QF3: { t1: groupStats[2][0].name, t2: groupStats[0][1].name }, QF4: { t1: groupStats[1][1].name, t2: groupStats[2][1].name } } };
         }
 
         function renderTables(res) {
-            const cont = document.getElementById('leaderboard-container');
-            cont.innerHTML = "";
+            const cont = document.getElementById('leaderboard-container'); cont.innerHTML = "";
             res.groupStats.forEach((stats, i) => {
                 let html = `<div class="bg-white rounded-xl shadow-sm border p-4"><h3 class="font-black text-indigo-600 text-xs mb-2 uppercase">Group ${String.fromCharCode(65+i)}</h3><table class="w-full text-xs">`;
-                stats.forEach((s, idx) => {
-                    html += `<tr class="border-b last:border-0 ${idx < 2 ? 'font-bold text-green-600':''}"><td class="py-2">${s.name}</td><td class="text-right font-black">${s.p}pts</td></tr>`;
-                });
+                stats.forEach((s, idx) => { html += `<tr class="border-b last:border-0 ${idx < 2 ? 'font-bold text-green-600':''}"><td class="py-2">${s.name}</td><td class="text-right font-black">${s.p}pts</td></tr>`; });
                 cont.innerHTML += html + `</table></div>`;
             });
-            document.getElementById('wildcard-list').innerHTML = `<p class="text-[10px] font-black uppercase text-amber-600 mb-1">Top 3rd Place Teams</p>` + res.wildcards.map(w => `<div class="flex justify-between text-xs font-bold text-amber-900"><span>${w.name}</span><span>${w.p}pts</span></div>`).join('');
+            document.getElementById('wildcard-list').innerHTML = `<p class="text-[10px] font-black uppercase text-amber-600 mb-1">Wildcards</p>` + res.wildcards.map(w => `<div class="flex justify-between text-xs font-bold text-amber-900"><span>${w.name}</span><span>${w.p}pts</span></div>`).join('');
         }
 
         function renderBracket(q) {
             const winners = {};
-            const matchups = {
-                QF: [ ["QF1", q.QF1.t1, q.QF1.t2], ["QF2", q.QF2.t1, q.QF2.t2], ["QF3", q.QF3.t1, q.QF3.t2], ["QF4", q.QF4.t1, q.QF4.t2] ],
-                SF: [ ["SF1", "winners.QF1", "winners.QF4"], ["SF2", "winners.QF2", "winners.QF3"] ],
-                F:  [ ["FINAL", "winners.SF1", "winners.SF2"] ]
-            };
-
             const renderM = (id, team1, team2, container) => {
-                const t1 = team1.startsWith("winners") ? eval(team1) : team1;
-                const t2 = team2.startsWith("winners") ? eval(team2) : team2;
+                const t1 = team1.startsWith("win") ? winners[team1.split('.')[1]] : team1;
+                const t2 = team2.startsWith("win") ? winners[team2.split('.')[1]] : team2;
                 const s = activeData.koScores[id] || ["", ""];
                 const w = (t1 && t2 && s[0] !== "" && s[1] !== "") ? (s[0] > s[1] ? t1 : t2) : "";
                 winners[id] = w;
-
-                container.innerHTML += `
-                <div class="bg-white p-3 rounded-xl border flex items-center justify-between shadow-sm border-slate-100">
-                    <div class="w-24 truncate text-[11px] font-bold ${w === t1 && w ? 'text-green-600':''}">${t1 || '---'}</div>
-                    <div class="flex gap-1">
-                        <input type="number" value="${s[0]}" onchange="saveKo('${id}',0,this.value)" class="w-8 h-8 text-center bg-slate-50 border rounded font-bold text-sm">
-                        <input type="number" value="${s[1]}" onchange="saveKo('${id}',1,this.value)" class="w-8 h-8 text-center bg-slate-50 border rounded font-bold text-sm">
-                    </div>
-                    <div class="w-24 truncate text-[11px] font-bold text-right ${w === t2 && w ? 'text-green-600':''}">${t2 || '---'}</div>
-                </div>`;
+                container.innerHTML += `<div class="bg-white p-3 rounded-xl border flex items-center justify-between shadow-sm border-slate-100"><div class="w-24 truncate text-[11px] font-bold ${w === t1 && w ? 'text-green-600':''}">${t1 || '---'}</div><div class="flex gap-1"><input type="number" value="${s[0]}" onchange="saveKo('${id}',0,this.value)" class="w-8 h-8 text-center bg-slate-50 border rounded font-bold text-sm"><input type="number" value="${s[1]}" onchange="saveKo('${id}',1,this.value)" class="w-8 h-8 text-center bg-slate-50 border rounded font-bold text-sm"></div><div class="w-24 truncate text-[11px] font-bold text-right ${w === t2 && w ? 'text-green-600':''}">${t2 || '---'}</div></div>`;
             };
-
             const qfC = document.getElementById('qf-bracket'); qfC.innerHTML = "";
-            matchups.QF.forEach(m => renderM(m[0], m[1], m[2], qfC));
+            renderM("QF1", q.QF1.t1, q.QF1.t2, qfC); renderM("QF2", q.QF2.t1, q.QF2.t2, qfC); renderM("QF3", q.QF3.t1, q.QF3.t2, qfC); renderM("QF4", q.QF4.t1, q.QF4.t2, qfC);
             const sfC = document.getElementById('sf-bracket'); sfC.innerHTML = "";
-            matchups.SF.forEach(m => renderM(m[0], m[1], m[2], sfC));
+            renderM("SF1", "win.QF1", "win.QF4", sfC); renderM("SF2", "win.QF2", "win.QF3", sfC);
             const fC = document.getElementById('f-bracket'); fC.innerHTML = "";
-            renderM("FINAL", "winners.SF1", "winners.SF2", fC);
-
+            renderM("FINAL", "win.SF1", "win.SF2", fC);
+            
             if(winners.FINAL) {
                 activeData.finalWinner = winners.FINAL;
                 document.getElementById('archive-button-container').classList.remove('hidden');
@@ -310,50 +257,42 @@
             syncActive(); refreshUI();
         }
 
-        // --- HISTORY & ARCHIVING ---
+        // --- HISTORY FIX ---
         function archiveTournament() {
-            if(!confirm("Archive this tournament and clear the current board?")) return;
+            if(!confirm("Archive and reset?")) return;
             const entry = {
                 id: Date.now(),
-                date: new Date().toLocaleDateString(),
+                date: new Date().toLocaleString(),
                 winner: activeData.finalWinner,
                 data: JSON.parse(JSON.stringify(activeData))
             };
+            // 1. Save to account history
             accounts[currentUser].history.unshift(entry);
-            // Reset Active
+            // 2. Clear current active board
             activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false };
-            syncActive();
-            location.reload();
+            accounts[currentUser].active = activeData;
+            // 3. Sync and reload
+            saveAccounts();
+            location.reload(); 
         }
 
         function renderHistory() {
-            const cont = document.getElementById('history-list');
-            cont.innerHTML = "";
-            if(!currentUser || accounts[currentUser].history.length === 0) {
-                cont.innerHTML = "<p class='text-slate-400 text-center py-10 text-sm'>No completed tournaments yet.</p>";
-                return;
+            const cont = document.getElementById('history-list'); cont.innerHTML = "";
+            if(!currentUser || !accounts[currentUser].history.length) {
+                cont.innerHTML = "<p class='text-slate-400 text-center py-10 text-sm'>History empty.</p>"; return;
             }
             accounts[currentUser].history.forEach(h => {
-                cont.innerHTML += `
-                <div onclick="viewHistoryDetails(${h.id})" class="bg-white p-4 rounded-xl border shadow-sm flex justify-between items-center active:bg-slate-50">
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase">${h.date}</p>
-                        <p class="font-bold text-slate-800">Winner: ${h.winner}</p>
-                    </div>
-                    <div class="text-indigo-600 text-xs font-bold">View Details →</div>
-                </div>`;
+                cont.innerHTML += `<div onclick="loadHistoryItem(${h.id})" class="bg-white p-4 rounded-xl border flex justify-between items-center"><div><p class="text-[10px] font-black text-slate-400 uppercase">${h.date}</p><p class="font-bold">Winner: ${h.winner}</p></div><div class="text-indigo-600 text-xs">View →</div></div>`;
             });
         }
 
-        function viewHistoryDetails(id) {
+        function loadHistoryItem(id) {
             const h = accounts[currentUser].history.find(x => x.id === id);
-            activeData = h.data; // Temporarily load data
-            refreshUI();
-            showTab('knockouts');
-            alert("Viewing ARCHIVED details for tournament on " + h.date);
+            activeData = JSON.parse(JSON.stringify(h.data));
+            refreshUI(); showTab('knockouts');
+            alert("Viewing details for: " + h.date + "\n\nNote: Changes made while viewing history are not saved.");
         }
 
-        // --- TABS & ANIMATION ---
         function showTab(id) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -361,25 +300,31 @@
             const btn = document.getElementById('tab-'+id);
             if(id === 'winner') { btn.classList.add('border-amber-500'); startConfetti(); }
             else { btn.classList.add('border-indigo-600', 'text-indigo-600'); stopConfetti(); }
-            if(id === 'rankings' || id === 'knockouts' || id === 'history') refreshUI();
+            if(id !== 'setup') refreshUI();
         }
 
         function startConfetti() {
             const cont = document.getElementById('particle-container');
             for(let i=0; i<50; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
+                const p = document.createElement('div'); p.className = 'particle';
                 p.style.left = Math.random() * 100 + 'vw';
                 p.style.backgroundColor = ['#fbbf24','#34d399','#60a5fa','#f87171'][Math.floor(Math.random()*4)];
-                p.style.animationDuration = (Math.random()*3+2)+'s';
-                p.style.animationDelay = (Math.random()*2)+'s';
+                p.style.animationDuration = (Math.random()*3+2)+'s'; p.style.animationDelay = (Math.random()*2)+'s';
                 cont.appendChild(p);
             }
         }
         function stopConfetti() { document.getElementById('particle-container').innerHTML = ""; }
-        function resetTournament() { if(confirm("Clear current board?")) { activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false }; syncActive(); location.reload(); } }
+        function resetTournament() { if(confirm("Reset current board?")) { activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false }; syncActive(); location.reload(); } }
 
-        window.onload = () => { if(!currentUser) document.getElementById('auth-overlay').classList.remove('hidden'); };
+        // --- SESSION RESTORE ON LOAD ---
+        window.onload = () => {
+            const sessionUser = localStorage.getItem('padelSession');
+            if(sessionUser && accounts[sessionUser]) {
+                loginUser(sessionUser);
+            } else {
+                document.getElementById('auth-overlay').classList.remove('hidden');
+            }
+        };
     </script>
 </body>
 </html>
