@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Padel Hub | Professional Club Manager</title>
+    <title>Padel Hub | Professional Clubnaji Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -17,7 +17,6 @@
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
 
-        /* FIX: Prevents mobile zoom and ensures smooth focus transitions */
         input { 
             font-size: 16px !important; 
             touch-action: manipulation;
@@ -70,13 +69,6 @@
         </section>
     </main>
 
-    <main id="page-about" class="page-content fade-in py-16 px-6 max-w-3xl mx-auto">
-        <h2 class="text-3xl font-black text-indigo-950 mb-6 uppercase italic">About Padel Hub</h2>
-        <div class="prose text-slate-600 space-y-4">
-            <p>Padel Hub was designed for enthusiasts who want professional-grade tournament organization without the overhead of complex software.</p>
-        </div>
-    </main>
-
     <main id="page-tournaments" class="page-content fade-in">
         <div id="tournament-dashboard">
             <nav class="flex bg-white border-b sticky top-[64px] z-30 overflow-x-auto no-scrollbar">
@@ -97,15 +89,12 @@
                     <div id="leaderboard-container" class="space-y-6"></div>
                     <div id="wildcard-list" class="mt-6 bg-amber-50 p-4 rounded-xl border border-amber-200"></div>
                 </div>
-                
                 <div id="t-finals" class="tournament-tab">
-                    <div id="bracket-container" class="space-y-8">
-                        </div>
+                    <div id="bracket-container" class="space-y-8"></div>
                     <div id="archive-button-container" class="mt-10 hidden">
                         <button onclick="archiveTournament()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl">COMPLETE & ARCHIVE</button>
                     </div>
                 </div>
-
                 <div id="t-history" class="tournament-tab">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="font-black text-xs uppercase tracking-widest">Archives</h3>
@@ -136,9 +125,7 @@
             document.getElementById('mobile-menu').classList.add('hidden');
         }
 
-        function toggleMobileMenu() {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        }
+        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
 
         function showTTab(tabId) {
             document.querySelectorAll('.tournament-tab').forEach(t => t.classList.remove('active'));
@@ -231,52 +218,40 @@
             });
         }
 
-        // FIXED: Combines all KO stages into one HTML string for easy tabbing
         function renderBracket(qual) {
-            const wins = {};
             const cont = document.getElementById('bracket-container');
-            let fullHTML = "";
-
             const createMatch = (id, t1, t2, label) => {
                 const s = activeData.koScores[id] || ["", ""];
-                const w = (t1 && t2 && s[0] !== "" && s[1] !== "") ? (s[0]>s[1]?t1:t2) : null;
-                wins[id] = w;
                 return `
                 <div class="mb-2">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">${label}</p>
                     <div class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm">
-                        <span class="text-[11px] font-bold truncate w-24 ${w==t1?'text-green-600':''}">${t1||'TBD'}</span>
+                        <span class="text-[11px] font-bold truncate w-24">${t1||'TBD'}</span>
                         <div class="flex gap-1">
                             <input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
                             <input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
                         </div>
-                        <span class="text-[11px] font-bold text-right truncate w-24 ${w==t2?'text-green-600':''}">${t2||'TBD'}</span>
+                        <span class="text-[11px] font-bold text-right truncate w-24">${t2||'TBD'}</span>
                     </div>
                 </div>`;
             };
-
-            fullHTML += createMatch("QF1", qual.QF1[0], qual.QF1[1], "Quarter Final 1");
-            fullHTML += createMatch("QF2", qual.QF2[0], qual.QF2[1], "Quarter Final 2");
-            fullHTML += createMatch("QF3", qual.QF3[0], qual.QF3[1], "Quarter Final 3");
-            fullHTML += createMatch("QF4", qual.QF4[0], qual.QF4[1], "Quarter Final 4");
-            
-            fullHTML += `<div class="mt-4"></div>`; // Spacer
-            fullHTML += createMatch("SF1", wins.QF1, wins.QF4, "Semi Final 1");
-            fullHTML += createMatch("SF2", wins.QF2, wins.QF3, "Semi Final 2");
-            
-            fullHTML += `<div class="mt-4"></div>`; // Spacer
-            fullHTML += createMatch("F", wins.SF1, wins.SF2, "The Grand Final");
-
-            cont.innerHTML = fullHTML;
-
-            const arcBtn = document.getElementById('archive-button-container');
-            if(wins.F) { activeData.finalWinner = wins.F; arcBtn.classList.remove('hidden'); }
-            else { arcBtn.classList.add('hidden'); }
+            cont.innerHTML = createMatch("QF1", qual.QF1[0], qual.QF1[1], "Quarter Final 1") +
+                             createMatch("QF2", qual.QF2[0], qual.QF2[1], "Quarter Final 2") +
+                             createMatch("QF3", qual.QF3[0], qual.QF3[1], "Quarter Final 3") +
+                             createMatch("QF4", qual.QF4[0], qual.QF4[1], "Quarter Final 4") +
+                             `<div class="mt-4"></div>` +
+                             createMatch("SF1", "SF1 (TBD)", "SF1 (TBD)", "Semi Final 1") +
+                             createMatch("SF2", "SF2 (TBD)", "SF2 (TBD)", "Semi Final 2") +
+                             `<div class="mt-4"></div>` +
+                             createMatch("F", "Finalist 1", "Finalist 2", "The Grand Final");
         }
 
+        // UPDATED: Syncs data but doesn't re-render the whole DOM
         function updateKS(id, t, v) {
             if(!activeData.koScores[id]) activeData.koScores[id] = ["",""];
-            activeData.koScores[id][t] = v === "" ? "" : parseInt(v); sync(); refreshUI();
+            activeData.koScores[id][t] = v === "" ? "" : parseInt(v); 
+            sync(); 
+            // Optional: check archive status if you want the button to appear without tab switching
         }
 
         function archiveTournament() {
