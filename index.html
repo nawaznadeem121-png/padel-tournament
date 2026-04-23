@@ -23,9 +23,9 @@
     <nav class="bg-indigo-950 text-white sticky top-0 z-[100] shadow-xl">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center h-20">
-                <div class="flex items-center gap-3 cursor-pointer" onclick="showPage('home')">
-                    <img src="logo.png" alt="The Court Club Logo" class="h-10 md:h-12 w-auto object-contain">
-                    <span class="font-black text-lg md:text-xl tracking-tighter uppercase">
+                <div class="flex items-center gap-3 cursor-pointer relative z-[110]" onclick="showPage('home')">
+                    <img src="logo.png" alt="Logo" class="h-10 w-auto object-contain">
+                    <span class="font-black text-lg md:text-xl tracking-tighter uppercase whitespace-nowrap">
                         The Court <span class="text-amber-400">Club</span>
                     </span>
                 </div>
@@ -38,21 +38,21 @@
                     <button onclick="showPage('faqs')" class="hover:text-amber-400 transition">FAQs</button>
                 </div>
 
-                <div class="md:hidden">
-                    <button onclick="toggleMobileMenu()" class="text-2xl p-2 focus:outline-none">
-                        <i id="menu-icon" class="fas fa-bars"></i>
+                <div class="md:hidden relative z-[110]">
+                    <button id="hamburger-btn" onclick="toggleMobileMenu()" class="text-2xl p-4 -mr-4 focus:outline-none" aria-label="Toggle Menu">
+                        <i id="menu-icon" class="fas fa-bars pointer-events-none"></i>
                     </button>
                 </div>
             </div>
         </div>
         
-        <div id="mobile-menu" class="hidden bg-indigo-900 border-t border-indigo-800 md:hidden fade-in">
+        <div id="mobile-menu" class="hidden absolute top-full left-0 w-full bg-indigo-950 border-t border-indigo-900 shadow-2xl md:hidden fade-in">
             <div class="flex flex-col p-6 space-y-6 font-bold uppercase text-sm tracking-widest">
-                <button onclick="showPage('home')" class="text-left flex items-center gap-3"><i class="fas fa-home w-5"></i> Home</button>
-                <button onclick="showPage('about')" class="text-left flex items-center gap-3"><i class="fas fa-info-circle w-5"></i> About Us</button>
-                <button onclick="showPage('tournaments')" class="text-left text-amber-400 flex items-center gap-3"><i class="fas fa-trophy w-5"></i> Tournaments</button>
-                <button onclick="showPage('rules')" class="text-left flex items-center gap-3"><i class="fas fa-book w-5"></i> Rules</button>
-                <button onclick="showPage('faqs')" class="text-left flex items-center gap-3"><i class="fas fa-question-circle w-5"></i> FAQs</button>
+                <button onclick="showPage('home')" class="text-left flex items-center gap-4"><i class="fas fa-home text-amber-400"></i> Home</button>
+                <button onclick="showPage('about')" class="text-left flex items-center gap-4"><i class="fas fa-info-circle text-amber-400"></i> About Us</button>
+                <button onclick="showPage('tournaments')" class="text-left flex items-center gap-4"><i class="fas fa-trophy text-amber-400"></i> Tournaments</button>
+                <button onclick="showPage('rules')" class="text-left flex items-center gap-4"><i class="fas fa-book text-amber-400"></i> Rules</button>
+                <button onclick="showPage('faqs')" class="text-left flex items-center gap-4"><i class="fas fa-question-circle text-amber-400"></i> FAQs</button>
             </div>
         </div>
     </nav>
@@ -66,87 +66,17 @@
                 <button onclick="showPage('tournaments')" class="bg-amber-500 hover:bg-amber-400 text-indigo-950 font-black px-8 py-4 rounded-full transition transform hover:scale-105 shadow-lg uppercase tracking-widest text-sm">Access Tournaments</button>
             </div>
         </section>
-
-        <section class="max-w-5xl mx-auto py-16 px-6 grid md:grid-cols-3 gap-8">
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center">
-                <div class="text-3xl mb-4">🏆</div>
-                <h3 class="font-bold text-xl mb-2">Live Brackets</h3>
-                <p class="text-slate-500 text-sm">Automated Quarter-finals, Semi-finals, and Grand Finals logic built for The Court Club.</p>
-            </div>
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center">
-                <div class="text-3xl mb-4">📊</div>
-                <h3 class="font-bold text-xl mb-2">Smart Tables</h3>
-                <p class="text-slate-500 text-sm">Real-time point calculation and best runner-up qualification logic.</p>
-            </div>
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center">
-                <div class="text-3xl mb-4">💾</div>
-                <h3 class="font-bold text-xl mb-2">Data Security</h3>
-                <p class="text-slate-500 text-sm">Export and Import your club history to keep your rankings safe.</p>
-            </div>
-        </section>
     </main>
 
     <main id="page-about" class="page-content fade-in py-16 px-6 max-w-3xl mx-auto">
         <h2 class="text-3xl font-black text-indigo-950 mb-6 uppercase italic">About The Court Club</h2>
-        <p class="text-slate-600">The premier platform for professional Padel tournament organization.</p>
-    </main>
-
-    <main id="page-rules" class="page-content fade-in py-16 px-6 max-w-4xl mx-auto">
-        <h2 class="text-3xl font-black text-indigo-950 mb-8 uppercase italic">Official Rules</h2>
-        <p class="text-slate-600">Standard club tournament rules apply.</p>
-    </main>
-
-    <main id="page-faqs" class="page-content fade-in py-16 px-6 max-w-3xl mx-auto">
-        <h2 class="text-3xl font-black text-indigo-950 mb-8 uppercase italic">FAQs</h2>
-        <p class="text-slate-600">Common questions regarding the ranking system.</p>
+        <p class="text-slate-600">This platform was built to streamline local padel communities, providing professional scoring and historical tracking for every match played.</p>
     </main>
 
     <main id="page-tournaments" class="page-content fade-in">
         <div id="auth-overlay" class="bg-white p-10 text-center min-h-[60vh] flex flex-col justify-center items-center">
             <h2 class="text-2xl font-black mb-4 uppercase">Tournament Portal</h2>
-            <p class="text-slate-500 mb-6">Login to manage your tournaments.</p>
             <div class="w-full max-w-xs space-y-3">
                 <input type="text" id="username" placeholder="Username" class="w-full p-4 bg-slate-100 rounded-xl outline-none">
                 <input type="password" id="password" placeholder="Password" class="w-full p-4 bg-slate-100 rounded-xl outline-none">
-                <button onclick="handleAuth('login')" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl">Login</button>
-            </div>
-        </div>
-    </main>
-
-    <footer class="bg-indigo-950 text-indigo-300 py-12 px-6 text-center border-t border-indigo-900 mt-20">
-        <img src="logo.png" alt="The Court Club" class="h-12 mx-auto mb-4 opacity-50 grayscale brightness-200">
-        <p class="text-[10px] uppercase font-black tracking-widest">&copy; 2026 The Court Club. All rights reserved.</p>
-    </footer>
-
-    <script>
-        let currentUser = null;
-
-        // --- NAVIGATION LOGIC ---
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobile-menu');
-            const icon = document.getElementById('menu-icon');
-            const isOpen = !menu.classList.contains('hidden');
-
-            if (isOpen) {
-                menu.classList.add('hidden');
-                icon.classList.replace('fa-xmark', 'fa-bars');
-            } else {
-                menu.classList.remove('hidden');
-                icon.classList.replace('fa-bars', 'fa-xmark');
-            }
-        }
-
-        function showPage(pageId) {
-            // Hide all pages
-            document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-            // Show target page
-            const target = document.getElementById('page-' + pageId);
-            if(target) target.classList.add('active');
-            
-            // Scroll to top
-            window.scrollTo(0, 0);
-            
-            // Close mobile menu and reset icon
-            const menu = document.getElementById('mobile-menu');
-            const icon = document.getElementById('menu-icon');
-            menu
+                <button onclick="handleAuth()" class="w-full bg
