@@ -17,8 +17,11 @@
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
 
-        /* Mobile Zoom Fix */
-        input { font-size: 16px !important; }
+        /* FIX: Prevents mobile zoom and ensures smooth focus transitions */
+        input { 
+            font-size: 16px !important; 
+            touch-action: manipulation;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
@@ -94,14 +97,15 @@
                     <div id="leaderboard-container" class="space-y-6"></div>
                     <div id="wildcard-list" class="mt-6 bg-amber-50 p-4 rounded-xl border border-amber-200"></div>
                 </div>
+                
                 <div id="t-finals" class="tournament-tab">
-                    <div id="qf-bracket" class="space-y-3 mb-8"></div>
-                    <div id="sf-bracket" class="space-y-3 mb-8"></div>
-                    <div id="f-bracket" class="space-y-3"></div>
+                    <div id="bracket-container" class="space-y-8">
+                        </div>
                     <div id="archive-button-container" class="mt-10 hidden">
                         <button onclick="archiveTournament()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl">COMPLETE & ARCHIVE</button>
                     </div>
                 </div>
+
                 <div id="t-history" class="tournament-tab">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="font-black text-xs uppercase tracking-widest">Archives</h3>
@@ -118,7 +122,6 @@
     </main>
 
     <script>
-        // GLOBAL STATE
         const USER_KEY = "ClubManager";
         let activeData = { teams: Array(12).fill(""), groups: [], groupScores: {}, koScores: {}, finalWinner: null, generated: false };
 
@@ -155,7 +158,7 @@
         function initInputs() {
             const cont = document.getElementById('team-inputs'); cont.innerHTML = "";
             activeData.teams.forEach((t, i) => {
-                cont.innerHTML += `<input type="text" value="${t}" onchange="activeData.teams[${i}]=this.value;sync()" placeholder="Team ${i+1}" class="w-full p-4 rounded-xl border border-slate-200 outline-none text-sm font-bold shadow-sm">`;
+                cont.innerHTML += `<input type="text" value="${t}" onchange="activeData.teams[${i}]=this.value;sync()" placeholder="Team ${i+1}" class="w-full p-4 rounded-xl border border-slate-200 outline-none font-bold shadow-sm">`;
             });
         }
 
@@ -170,7 +173,7 @@
             cont.innerHTML = "";
             const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
             activeData.groups.forEach((g, gIdx) => {
-                let h = `<div class="bg-white rounded-2xl shadow-sm border overflow-hidden"><div class="bg-indigo-900 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gIdx)}</div>`;
+                let h = `<div class="bg-white rounded-2xl shadow-sm border mb-4 overflow-hidden"><div class="bg-indigo-900 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gIdx)}</div>`;
                 pairs.forEach((p, mIdx) => {
                     const s = activeData.groupScores[`g${gIdx}m${mIdx}`] || ["", ""];
                     h += `<div class="flex items-center justify-between p-3 border-b last:border-0"><span class="text-[10px] font-bold w-20 truncate">${g[p[0]]||'TBD'}</span><div class="flex gap-1"><input type="number" value="${s[0]}" onchange="updateGS(${gIdx},${mIdx},0,this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-lg font-bold"><input type="number" value="${s[1]}" onchange="updateGS(${gIdx},${mIdx},1,this.value)" class="w-10 h-10 text-center bg-slate-50 rounded-lg font-bold"></div><span class="text-[10px] font-bold w-20 text-right truncate">${g[p[1]]||'TBD'}</span></div>`;
@@ -217,7 +220,7 @@
             const cont = document.getElementById('leaderboard-container'); if(!cont) return;
             cont.innerHTML = "";
             res.gStats.forEach((s, i) => {
-                let h = `<div class="bg-white p-4 rounded-xl shadow-sm border"><h3 class="font-black text-[10px] text-indigo-600 mb-2 uppercase">Group ${String.fromCharCode(65+i)}</h3><table class="w-full text-xs">`;
+                let h = `<div class="bg-white p-4 rounded-xl shadow-sm border mb-4"><h3 class="font-black text-[10px] text-indigo-600 mb-2 uppercase">Group ${String.fromCharCode(65+i)}</h3><table class="w-full text-xs">`;
                 s.forEach((t, idx) => h += `<tr class="${idx<2?'font-bold text-green-600':''}"><td class="py-1">${t.name||'---'}</td><td class="text-right">${t.p}pts (${t.gd>0?'+':''}${t.gd})</td></tr>`);
                 cont.innerHTML += h + `</table></div>`;
             });
@@ -228,26 +231,44 @@
             });
         }
 
+        // FIXED: Combines all KO stages into one HTML string for easy tabbing
         function renderBracket(qual) {
             const wins = {};
-            const renderM = (id, t1, t2, contId) => {
-                const s = activeData.koScores[id] || ["",""];
+            const cont = document.getElementById('bracket-container');
+            let fullHTML = "";
+
+            const createMatch = (id, t1, t2, label) => {
+                const s = activeData.koScores[id] || ["", ""];
                 const w = (t1 && t2 && s[0] !== "" && s[1] !== "") ? (s[0]>s[1]?t1:t2) : null;
                 wins[id] = w;
-                const el = document.getElementById(contId);
-                if(el) el.innerHTML += `<div class="bg-white p-3 rounded-xl border flex items-center justify-between shadow-sm"><span class="text-[10px] font-bold w-20 truncate ${w==t1?'text-green-600':''}">${t1||'TBD'}</span><div class="flex gap-1"><input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-8 h-8 text-center bg-slate-50 border rounded font-bold text-xs"><input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-8 h-8 text-center bg-slate-50 border rounded font-bold text-xs"></div><span class="text-[10px] font-bold w-20 text-right truncate ${w==t2?'text-green-600':''}">${t2||'TBD'}</span></div>`;
+                return `
+                <div class="mb-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">${label}</p>
+                    <div class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm">
+                        <span class="text-[11px] font-bold truncate w-24 ${w==t1?'text-green-600':''}">${t1||'TBD'}</span>
+                        <div class="flex gap-1">
+                            <input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                            <input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                        </div>
+                        <span class="text-[11px] font-bold text-right truncate w-24 ${w==t2?'text-green-600':''}">${t2||'TBD'}</span>
+                    </div>
+                </div>`;
             };
+
+            fullHTML += createMatch("QF1", qual.QF1[0], qual.QF1[1], "Quarter Final 1");
+            fullHTML += createMatch("QF2", qual.QF2[0], qual.QF2[1], "Quarter Final 2");
+            fullHTML += createMatch("QF3", qual.QF3[0], qual.QF3[1], "Quarter Final 3");
+            fullHTML += createMatch("QF4", qual.QF4[0], qual.QF4[1], "Quarter Final 4");
             
-            document.getElementById('qf-bracket').innerHTML = `<p class="text-[9px] font-black text-slate-400 mb-2 uppercase tracking-tighter">Quarter-Finals</p>`;
-            renderM("QF1", qual.QF1[0], qual.QF1[1], 'qf-bracket'); renderM("QF2", qual.QF2[0], qual.QF2[1], 'qf-bracket');
-            renderM("QF3", qual.QF3[0], qual.QF3[1], 'qf-bracket'); renderM("QF4", qual.QF4[0], qual.QF4[1], 'qf-bracket');
+            fullHTML += `<div class="mt-4"></div>`; // Spacer
+            fullHTML += createMatch("SF1", wins.QF1, wins.QF4, "Semi Final 1");
+            fullHTML += createMatch("SF2", wins.QF2, wins.QF3, "Semi Final 2");
             
-            document.getElementById('sf-bracket').innerHTML = `<p class="text-[9px] font-black text-slate-400 mb-2 uppercase tracking-tighter">Semi-Finals</p>`;
-            renderM("SF1", wins.QF1, wins.QF4, 'sf-bracket'); renderM("SF2", wins.QF2, wins.QF3, 'sf-bracket');
-            
-            document.getElementById('f-bracket').innerHTML = `<p class="text-[9px] font-black text-slate-400 mb-2 uppercase tracking-tighter">Grand Final</p>`;
-            renderM("F", wins.SF1, wins.SF2, 'f-bracket');
-            
+            fullHTML += `<div class="mt-4"></div>`; // Spacer
+            fullHTML += createMatch("F", wins.SF1, wins.SF2, "The Grand Final");
+
+            cont.innerHTML = fullHTML;
+
             const arcBtn = document.getElementById('archive-button-container');
             if(wins.F) { activeData.finalWinner = wins.F; arcBtn.classList.remove('hidden'); }
             else { arcBtn.classList.add('hidden'); }
