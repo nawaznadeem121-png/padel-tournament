@@ -7,11 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* THE COURT CLUB BRAND GUIDELINES */
         :root {
-            --brand-navy: #0e1b32;   /* Exact Navy from Logo */
-            --brand-cream: #c8bc9f;  /* Exact Cream from Logo */
-            --bg-neutral: #f4f4f2;   /* Soft warm background */
+            --brand-navy: #0e1b32;
+            --brand-cream: #c8bc9f;
+            --bg-neutral: #f4f4f2;
         }
 
         body { background-color: var(--bg-neutral); color: var(--brand-navy); font-family: 'serif', ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
@@ -27,22 +26,16 @@
         .tournament-tab.active { display: block; }
         
         input, select { font-size: 16px !important; touch-action: manipulation; font-family: ui-sans-serif !important; }
-        
-        /* Navigation & Tabs */
         .active-tab-btn { border-bottom: 3px solid var(--brand-cream); color: var(--brand-cream) !important; }
         
-        /* States */
         .read-only input, .read-only select { pointer-events: none; background: #f1f5f9; border: none; appearance: none; }
         .qualifying-row { background-color: rgba(200, 188, 159, 0.2); font-weight: 800; }
         .wildcard-row { border: 2px solid var(--brand-cream); font-weight: 800; }
         
-        /* Animations */
         .pulse { animation: pulse 2s infinite; }
         .timer-running { color: #ef4444; font-weight: 900; animation: pulse 2s infinite; }
-        .event-timer { font-variant-numeric: tabular-nums; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        /* Custom UI Elements */
         .card { background: white; border-radius: 0.5rem; border: 1px solid rgba(14, 27, 50, 0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         .btn-primary { background-color: var(--brand-navy); color: var(--brand-cream); font-weight: 900; text-transform: uppercase; border-radius: 0.5rem; border: 1px solid var(--brand-cream); }
         .btn-secondary { border: 2px solid var(--brand-navy); color: var(--brand-navy); }
@@ -62,7 +55,7 @@
         <div class="flex justify-center items-center bg-white/5 rounded-lg py-3 border border-brand-cream/30 mx-4">
             <div class="text-center">
                 <p class="text-[9px] font-black uppercase tracking-[0.3em] text-brand-cream">Remaining Tournament Time</p>
-                <p id="global-countdown" class="event-timer text-3xl font-light text-brand-cream tracking-widest">03:00:00</p>
+                <p id="global-countdown" class="text-3xl font-light text-brand-cream tracking-widest">03:00:00</p>
             </div>
         </div>
     </header>
@@ -75,9 +68,9 @@
     </nav>
 
     <div class="p-4 max-w-md mx-auto pb-20">
-        <div id="sync-msg" class="hidden text-center py-10">
-            <i class="fa-solid fa-rotate text-brand-navy text-3xl mb-4 animate-spin"></i>
-            <p class="font-black text-slate-400 uppercase text-[10px] tracking-widest">Syncing Live Data...</p>
+        <div id="sync-msg" class="hidden text-center py-20">
+            <i class="fa-solid fa-rotate text-brand-navy text-4xl mb-4 animate-spin"></i>
+            <p class="font-black text-slate-400 uppercase text-[12px] tracking-widest">Connecting to Live Board...</p>
         </div>
 
         <div id="tab-setup" class="tournament-tab active">
@@ -95,9 +88,9 @@
         </div>
 
         <div id="tab-rankings" class="tournament-tab">
-            <div class="flex justify-between items-center mb-6 admin-only border-b border-brand-navy/10 pb-2">
+            <div class="flex justify-between items-center mb-6 border-b border-brand-navy/10 pb-2">
                 <span class="text-[10px] font-black text-brand-navy uppercase tracking-widest">Live Group Standings</span>
-                <button id="live-btn" onclick="startLive()" class="bg-brand-navy text-brand-cream text-[10px] font-bold px-4 py-2 rounded-md uppercase tracking-tighter">Go Live</button>
+                <button id="live-btn" onclick="startLive()" class="admin-only bg-brand-navy text-brand-cream text-[10px] font-bold px-4 py-2 rounded-md uppercase tracking-tighter">Go Live</button>
             </div>
             <div id="tables-container" class="space-y-6"></div>
             <div id="wildcard-area" class="mt-8 hidden bg-white p-4 rounded-lg border-2 border-brand-cream shadow-sm">
@@ -120,15 +113,13 @@
             data.size = n; data.names = Array(n).fill("");
             [12,16,32].forEach(s => {
                 const el = document.getElementById('sz-'+s);
-                if(el) {
-                    el.className = (s==n) ? "py-3 rounded-lg border-2 font-bold btn-active" : "py-3 rounded-lg border-2 font-bold btn-secondary";
-                }
+                if(el) el.className = (s==n) ? "py-3 rounded-lg border-2 font-bold btn-active" : "py-3 rounded-lg border-2 font-bold btn-secondary";
             });
             renderInputs();
         }
 
         function renderInputs() {
-            document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" id="team-in-${i}" value="${n}" onchange="data.names[${i}]=this.value; save();" placeholder="Team ${i+1} Name" class="w-full p-4 border rounded-lg font-bold shadow-sm focus:border-brand-cream outline-none">`).join('');
+            document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" id="team-in-${i}" value="${n}" onchange="data.names[${i}]=this.value; save();" placeholder="Team ${i+1} Name" class="w-full p-4 border rounded-lg font-bold shadow-sm outline-none">`).join('');
         }
 
         function startTourney() {
@@ -141,7 +132,7 @@
 
         function startLive() {
             if(!data.room) data.room = 'courtclub_' + Math.random().toString(36).substr(2, 9);
-            const shareableUrl = window.location.href.split('?')[0] + '?room=' + data.room;
+            const shareableUrl = window.location.origin + window.location.pathname + '?room=' + data.room;
             navigator.clipboard.writeText(shareableUrl);
             document.getElementById('live-indicator').classList.remove('hidden');
             document.getElementById('live-btn').innerText = "Link Copied";
@@ -164,9 +155,11 @@
         }
 
         function listenForUpdates(room) {
-            document.getElementById('sync-msg').classList.remove('hidden');
-            // Notify admin to push current data
-            fetch(`https://ntfy.sh/${room}_join`, { method: 'POST', body: 'join' });
+            const syncEl = document.getElementById('sync-msg');
+            syncEl.classList.remove('hidden');
+            
+            // Request an immediate data push from admin
+            fetch(`https://ntfy.sh/${room}_join`, { method: 'POST', body: 'request_data' });
             
             const eventSource = new EventSource(`https://ntfy.sh/${room}/sse`);
             eventSource.onmessage = (e) => {
@@ -174,20 +167,19 @@
                     const payload = JSON.parse(e.data);
                     if(payload.message) {
                         const newData = JSON.parse(payload.message);
-                        if(newData.groups) {
+                        if(newData.groups && newData.groups.length > 0) {
                             data = newData;
-                            localStorage.setItem('courtclub_v6', JSON.stringify(data));
-                            document.getElementById('sync-msg').classList.add('hidden');
+                            syncEl.classList.add('hidden');
                             refresh();
                         }
                     }
-                } catch(err) { }
+                } catch(err) { console.error("Sync Error", err); }
             };
         }
 
         function toggleTimer(id, mins) {
             if (isGuest) return;
-            if (!data.startTime) { data.startTime = Date.now(); }
+            if (!data.startTime) data.startTime = Date.now();
             if (!data.timers[id]) {
                 data.timers[id] = { remaining: mins * 60, running: true };
             } else {
@@ -221,7 +213,6 @@
                 const el = document.getElementById('global-countdown');
                 if(el) el.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
             }
-            if (!isGuest && data.room && new Date().getSeconds() % 10 === 0) save();
         }, 1000);
 
         function formatTime(sec) {
@@ -236,17 +227,17 @@
             return `
                 <div class="flex items-center justify-between mt-3 pt-3 border-t border-brand-navy/5">
                     <select onchange="setCourt('${id}', this.value)" ${isGuest ? 'disabled' : ''} class="text-[10px] font-black uppercase bg-brand-navy/5 border-none rounded-md px-2 py-1 outline-none text-brand-navy">
-                        <option value="">Select Court</option>
-                        <option value="Court 1" ${court==='Court 1'?'selected':''}>Court 1</option>
-                        <option value="Court 2" ${court==='Court 2'?'selected':''}>Court 2</option>
-                        <option value="Court 3" ${court==='Court 3'?'selected':''}>Court 3</option>
-                        <option value="Court 4" ${court==='Court 4'?'selected':''}>Court 4</option>
+                        <option value="">Court</option>
+                        <option value="C1" ${court==='C1'?'selected':''}>C1</option>
+                        <option value="C2" ${court==='C2'?'selected':''}>C2</option>
+                        <option value="C3" ${court==='C3'?'selected':''}>C3</option>
+                        <option value="C4" ${court==='C4'?'selected':''}>C4</option>
                     </select>
                     <div class="flex items-center gap-3">
                         <span id="timer-${id}" class="text-[12px] font-mono font-black ${t.running ? 'timer-running' : 'text-slate-400'}">
                             ${formatTime(t.remaining)}
                         </span>
-                        ${!isGuest ? `<button onclick="toggleTimer('${id}', ${mins})" class="bg-brand-navy text-brand-cream px-3 py-1 rounded text-[10px] font-bold uppercase tracking-tighter">
+                        ${!isGuest ? `<button onclick="toggleTimer('${id}', ${mins})" class="bg-brand-navy text-brand-cream px-3 py-1 rounded text-[10px] font-bold uppercase">
                             ${t.running ? 'Pause' : 'Start'}
                         </button>` : ''}
                     </div>
@@ -268,6 +259,11 @@
         function refresh() {
             if(!data.groups || !data.groups.length) return;
             
+            // Hide Admin Items if Guest
+            if(isGuest) {
+                document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'none');
+            }
+
             // Standings logic
             let gStats = data.groups.map((g, i) => {
                 let s = g.map(name => ({ name, p: 0, gd: 0 }));
@@ -284,20 +280,20 @@
 
             document.getElementById('tables-container').innerHTML = gStats.map((s, i) => `
                 <div class="card p-4">
-                    <h3 class="font-black text-[10px] text-brand-navy mb-3 uppercase tracking-widest border-b border-brand-navy/10 pb-1">Group ${String.fromCharCode(65+i)}</h3>
+                    <h3 class="font-black text-[10px] text-brand-navy mb-3 uppercase tracking-widest border-b pb-1">Group ${String.fromCharCode(65+i)}</h3>
                     <table class="w-full text-[11px] font-bold">
                         ${s.map((t, idx) => `<tr class="${idx<2?'qualifying-row':''}">
                             <td class="py-2.5 px-2 rounded-l-md">${t.name || '---'}</td>
-                            <td class="text-right py-2.5 px-2 rounded-r-md text-brand-navy/60">${t.p}pts <span class="ml-1 opacity-50">(${t.gd})</span></td>
+                            <td class="text-right py-2.5 px-2 rounded-r-md text-brand-navy/60">${t.p}pts (${t.gd})</td>
                         </tr>`).join('')}
                     </table>
                 </div>`).join('');
 
-            // Group Matches logic
+            // Matches
             const gPairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
             document.getElementById('match-list').innerHTML = data.groups.map((g, gi) => `
                 <div class="card overflow-hidden">
-                    <div class="bg-brand-navy text-brand-cream px-4 py-2 text-[10px] font-black uppercase tracking-widest">Group ${String.fromCharCode(65+gi)} Matchday</div>
+                    <div class="bg-brand-navy text-brand-cream px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gi)}</div>
                     ${gPairs.map((p, mi) => {
                         const mid = `g${gi}m${mi}`;
                         const s = data.scores[mid] || ["",""];
@@ -305,8 +301,8 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-[11px] font-bold w-20 truncate">${g[p[0]]||'TBD'}</span>
                                 <div class="flex gap-2">
-                                    <input type="number" value="${s[0]}" oninput="updG(${gi},${mi},0,this.value)" ${isGuest?'disabled':''} class="w-12 h-12 text-center bg-slate-100 border-none rounded-lg font-black text-lg">
-                                    <input type="number" value="${s[1]}" oninput="updG(${gi},${mi},1,this.value)" ${isGuest?'disabled':''} class="w-12 h-12 text-center bg-slate-100 border-none rounded-lg font-black text-lg">
+                                    <input type="number" value="${s[0]}" oninput="updG(${gi},${mi},0,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded-lg font-black">
+                                    <input type="number" value="${s[1]}" oninput="updG(${gi},${mi},1,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded-lg font-black">
                                 </div>
                                 <span class="text-[11px] font-bold w-20 text-right truncate">${g[p[1]]||'TBD'}</span>
                             </div>
@@ -321,14 +317,9 @@
                 let thirds = gStats.map((s, i) => ({...s[2], grp: String.fromCharCode(65+i)})).sort((a,b) => b.p - a.p || b.gd - a.gd);
                 qual = [gStats[0][0].name, gStats[1][0].name, gStats[2][0].name, gStats[0][1].name, gStats[1][1].name, gStats[2][1].name, (thirds[0]||{}).name, (thirds[1]||{}).name];
                 document.getElementById('wildcard-area').classList.remove('hidden');
-                document.getElementById('wildcard-list').innerHTML = thirds.map((t, i) => `
-                    <div class="flex justify-between items-center text-[11px] p-3 ${i<2?'wildcard-row rounded-md bg-brand-cream/5':''} font-bold">
-                        <span>Group ${t.grp}: ${t.name || '---'}</span>
-                        <span>${t.p}pts (${t.gd})</span>
-                    </div>`).join('');
+                document.getElementById('wildcard-list').innerHTML = thirds.map((t, i) => `<div class="flex justify-between text-[11px] p-2 ${i<2?'wildcard-row rounded bg-brand-cream/10':''} font-bold"><span>Group ${t.grp}: ${t.name || '---'}</span><span>${t.p}pts (${t.gd})</span></div>`).join('');
             } else {
                 qual = gStats.flatMap(s => [s[0].name, s[1].name]);
-                document.getElementById('wildcard-area').classList.add('hidden');
             }
 
             const wins = {};
@@ -336,36 +327,26 @@
                 const s = data.ko[id] || ["", ""];
                 const w = (s[0]!=="" && s[1]!=="" && s[0]!==s[1]) ? (s[0]>s[1]?t1:t2) : null;
                 wins[id] = w;
-                return `
-                <div class="mb-4">
-                    <p class="text-[9px] font-black text-brand-navy/40 uppercase mb-1.5 ml-1 tracking-widest">${label}</p>
-                    <div class="card p-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[12px] font-black truncate w-24 ${w==t1?'text-brand-cream bg-brand-navy px-2 py-1 rounded':''}">${t1||'TBD'}</span>
-                            <div class="flex gap-2">
-                                <input type="number" value="${s[0]}" oninput="updK('${id}',0,this.value)" ${isGuest?'disabled':''} class="w-12 h-12 text-center bg-slate-100 border-none rounded-lg font-black text-lg">
-                                <input type="number" value="${s[1]}" oninput="updK('${id}',1,this.value)" ${isGuest?'disabled':''} class="w-12 h-12 text-center bg-slate-100 border-none rounded-lg font-black text-lg">
-                            </div>
-                            <span class="text-[12px] font-black text-right truncate w-24 ${w==t2?'text-brand-cream bg-brand-navy px-2 py-1 rounded':''}">${t2||'TBD'}</span>
+                return `<div class="mb-4"><p class="text-[9px] font-black opacity-40 uppercase mb-1 ml-1">${label}</p>
+                    <div class="card p-4"><div class="flex justify-between items-center">
+                        <span class="text-[11px] font-black truncate w-24 ${w==t1?'text-brand-cream bg-brand-navy px-1 rounded':''}">${t1||'TBD'}</span>
+                        <div class="flex gap-2">
+                            <input type="number" value="${s[0]}" oninput="updK('${id}',0,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded-lg font-black">
+                            <input type="number" value="${s[1]}" oninput="updK('${id}',1,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded-lg font-black">
                         </div>
-                        ${getMatchControlsHTML(id, time)}
-                    </div>
-                </div>`;
+                        <span class="text-[11px] font-black text-right truncate w-24 ${w==t2?'text-brand-cream bg-brand-navy px-1 rounded':''}">${t2||'TBD'}</span>
+                    </div>${getMatchControlsHTML(id, time)}</div></div>`;
             };
 
-            let bh = `<p class="text-center text-[11px] font-black text-brand-navy uppercase tracking-[0.4em] mb-6">Quarter Finals</p>`;
-            bh += matchHTML("QF1", qual[0], qual[7], "Match 1", 20) + matchHTML("QF2", qual[1], qual[6], "Match 2", 20) +
-                  matchHTML("QF3", qual[2], qual[5], "Match 3", 20) + matchHTML("QF4", qual[3], qual[4], "Match 4", 20);
-            bh += `<div class="h-px bg-brand-cream my-8"></div><p class="text-center text-[11px] font-black text-brand-navy uppercase tracking-[0.4em] mb-6">Semi Finals</p>`;
-            bh += matchHTML("SF1", wins.QF1, wins.QF4, "Semi 1", 30) + matchHTML("SF2", wins.QF2, wins.QF3, "Semi 2", 30);
-            bh += `<div class="py-6 border-t-2 border-brand-cream mt-8 text-center"><p class="text-[13px] font-black text-brand-navy uppercase tracking-[0.5em] mb-6">The Championship</p></div>`;
-            bh += matchHTML("F", wins.SF1, wins.SF2, "Final Match", 30);
+            let bh = `<p class="text-center text-[10px] font-black uppercase tracking-widest mb-4">Quarter Finals</p>` + 
+                     matchHTML("QF1", qual[0], qual[7], "Match 1", 20) + matchHTML("QF2", qual[1], qual[6], "Match 2", 20) +
+                     matchHTML("QF3", qual[2], qual[5], "Match 3", 20) + matchHTML("QF4", qual[3], qual[4], "Match 4", 20) +
+                     `<p class="text-center text-[10px] font-black uppercase tracking-widest my-6">Semi Finals</p>` +
+                     matchHTML("SF1", wins.QF1, wins.QF4, "Semi 1", 30) + matchHTML("SF2", wins.QF2, wins.QF3, "Semi 2", 30) +
+                     `<p class="text-center text-[10px] font-black uppercase tracking-widest my-6">Final</p>` +
+                     matchHTML("F", wins.SF1, wins.SF2, "Championship", 30);
             
             document.getElementById('bracket-container').innerHTML = bh;
-            
-            if(isGuest) {
-                document.querySelectorAll('.admin-only').forEach(e => e.remove());
-            }
         }
 
         function showTab(id) {
@@ -380,25 +361,30 @@
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const roomID = urlParams.get('room');
-            const saved = localStorage.getItem('courtclub_v6');
-            if(saved) data = JSON.parse(saved);
-
+            
             if(roomID) {
                 isGuest = true;
                 data.room = roomID;
                 document.body.classList.add('read-only');
                 document.getElementById('live-indicator').classList.remove('hidden');
+                
+                // Hide Setup tab and Admin buttons immediately
+                document.getElementById('btn-setup').style.display = 'none';
+                document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'none');
+                
                 listenForUpdates(roomID);
                 showTab('rankings');
             } else {
-                setTeams(data.size);
-                if(data.groups.length) { 
-                    showTab('groups');
+                const saved = localStorage.getItem('courtclub_v6');
+                if(saved) {
+                    data = JSON.parse(saved);
                     if(data.room) {
                         document.getElementById('live-indicator').classList.remove('hidden');
                         listenForJoinRequests();
                     }
                 }
+                setTeams(data.size);
+                if(data.groups.length) showTab('groups');
             }
         };
     </script>
