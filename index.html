@@ -9,33 +9,24 @@
     <style>
         .tournament-tab { display: none; }
         .tournament-tab.active { display: block; }
-        input, select { font-size: 16px !important; touch-action: manipulation; }
+        input { font-size: 16px !important; touch-action: manipulation; }
         .active-tab-btn { border-bottom: 3px solid #fb923c; color: #fb923c; }
-        .read-only input, .read-only select { pointer-events: none; background: #f1f5f9; border: none; appearance: none; }
+        .read-only input { pointer-events: none; background: #f1f5f9; border: none; }
         .qualifying-row { background-color: #f0fdf4; font-weight: 800; color: #166534; }
         .wildcard-row { background-color: #fffbeb; font-weight: 800; color: #92400e; }
         .pulse { animation: pulse 2s infinite; }
         .timer-running { color: #ef4444; font-weight: 900; animation: pulse 2s infinite; }
-        .event-timer { font-variant-numeric: tabular-nums; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
 
-    <header class="bg-indigo-950 text-white px-4 py-3 shadow-md">
-        <div class="flex justify-between items-center mb-1">
-            <div class="flex items-center gap-2">
-                <span class="font-black text-xl tracking-tighter uppercase text-orange-200">The Court Club</span>
-            </div>
-            <div id="live-indicator" class="hidden flex items-center gap-2 bg-red-600 px-2 py-1 rounded text-[10px] font-black uppercase">
-                <span class="w-2 h-2 bg-white rounded-full pulse"></span> Live
-            </div>
+    <header class="bg-indigo-950 text-white px-4 py-3 shadow-md flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <span class="font-black text-xl tracking-tighter uppercase text-orange-200">The Court Club</span>
         </div>
-        <div class="flex justify-center items-center bg-indigo-900/50 rounded-lg py-2 mt-2 border border-indigo-800">
-            <div class="text-center">
-                <p class="text-[8px] font-black uppercase tracking-[0.2em] text-indigo-300">Total Event Time Remaining</p>
-                <p id="global-countdown" class="event-timer text-xl font-black text-white">03:00:00</p>
-            </div>
+        <div id="live-indicator" class="hidden flex items-center gap-2 bg-red-600 px-2 py-1 rounded text-[10px] font-black uppercase">
+            <span class="w-2 h-2 bg-white rounded-full pulse"></span> Live
         </div>
     </header>
 
@@ -84,9 +75,10 @@
     </div>
 
     <script>
-        let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null, timers: {}, courts: {}, startTime: null };
+        let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null, timers: {} };
         let isGuest = false;
-        const EVENT_DURATION = 3 * 60 * 60 * 1000; // 3 hours in ms
+
+        // --- Core Logic ---
 
         function setTeams(n) {
             data.size = n; data.names = Array(n).fill("");
@@ -98,16 +90,18 @@
         }
 
         function renderInputs() {
-            document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" id="team-in-${i}" value="${n}" onchange="data.names[${i}]=this.value; save();" placeholder="Team ${i+1}" class="w-full p-3 border rounded-xl font-bold">`).join('');
+            document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" value="${n}" onchange="data.names[${i}]=this.value; save();" placeholder="Team ${i+1}" class="w-full p-3 border rounded-xl font-bold">`).join('');
         }
 
         function startTourney() {
             const n = data.size / 4;
-            data.groups = []; data.scores = {}; data.ko = {}; data.timers = {}; data.courts = {}; data.startTime = null;
+            data.groups = []; data.scores = {}; data.ko = {}; data.timers = {};
             for(let i=0; i<n; i++) data.groups.push(data.names.slice(i*4, i*4+4));
             showTab('groups');
             save();
         }
+
+        // --- Live / Sync Functionality ---
 
         function startLive() {
             if(!data.room) data.room = 'courtclub_' + Math.random().toString(36).substr(2, 9);
@@ -129,7 +123,7 @@
             refresh();
             if (focusedId) {
                 const el = document.getElementById(focusedId);
-                if (el) { el.focus(); }
+                if (el) { el.focus(); if (el.setSelectionRange) el.setSelectionRange(el.value.length, el.value.length); }
             }
         }
 
@@ -155,14 +149,10 @@
             };
         }
 
-        // --- Timer Engine ---
+        // --- Timer Logic ---
 
         function toggleTimer(id, mins) {
             if (isGuest) return;
-            // Trigger 3-hour event clock on the very first match start
-            if (!data.startTime) {
-                data.startTime = Date.now();
-            }
             if (!data.timers[id]) {
                 data.timers[id] = { remaining: mins * 60, running: true };
             } else {
@@ -171,38 +161,19 @@
             save();
         }
 
-        function setCourt(id, val) {
-            data.courts[id] = val;
-            save();
-        }
-
         setInterval(() => {
             let changed = false;
-            
-            // Handle Individual Match Timers
             Object.keys(data.timers).forEach(id => {
                 const t = data.timers[id];
                 if (t.running && t.remaining > 0) {
                     t.remaining--;
+                    changed = true;
                     const el = document.getElementById(`timer-${id}`);
                     if (el) el.innerText = formatTime(t.remaining);
                 }
             });
-
-            // Handle Global 3-Hour Clock
-            if (data.startTime) {
-                const elapsed = Date.now() - data.startTime;
-                const remaining = Math.max(0, EVENT_DURATION - elapsed);
-                const h = Math.floor(remaining / 3600000);
-                const m = Math.floor((remaining % 3600000) / 60000);
-                const s = Math.floor((remaining % 60000) / 1000);
-                document.getElementById('global-countdown').innerText = 
-                    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-                
-                if (remaining === 0) document.getElementById('global-countdown').classList.add('text-red-500');
-            }
-
-            if (!isGuest && new Date().getSeconds() % 10 === 0) save();
+            // Auto-save every 10 seconds if a timer is running to keep guests in sync
+            if (changed && !isGuest && new Date().getSeconds() % 10 === 0) save();
         }, 1000);
 
         function formatTime(sec) {
@@ -211,31 +182,21 @@
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
-        function getMatchControlsHTML(id, mins) {
+        function getTimerHTML(id, mins) {
             const t = data.timers[id] || { remaining: mins * 60, running: false };
-            const court = data.courts[id] || "";
             return `
-                <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
-                    <select onchange="setCourt('${id}', this.value)" class="text-[10px] font-black uppercase bg-slate-100 rounded px-1 py-1 outline-none">
-                        <option value="">Select Court</option>
-                        <option value="Court 1" ${court==='Court 1'?'selected':''}>Court 1</option>
-                        <option value="Court 2" ${court==='Court 2'?'selected':''}>Court 2</option>
-                        <option value="Court 3" ${court==='Court 3'?'selected':''}>Court 3</option>
-                        <option value="Court 4" ${court==='Court 4'?'selected':''}>Court 4</option>
-                    </select>
-                    
-                    <div class="flex items-center gap-2">
-                        <span id="timer-${id}" class="text-[11px] font-mono font-black ${t.running ? 'timer-running' : 'text-slate-400'}">
-                            ${formatTime(t.remaining)}
-                        </span>
-                        <button onclick="toggleTimer('${id}', ${mins})" class="admin-only bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[9px] font-bold uppercase">
-                            ${t.running ? 'Pause' : 'Start'}
-                        </button>
-                    </div>
+                <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
+                    <button onclick="toggleTimer('${id}', ${mins})" class="admin-only bg-slate-100 px-2 py-1 rounded text-[9px] font-bold uppercase">
+                        ${t.running ? 'Pause' : 'Start'}
+                    </button>
+                    <span id="timer-${id}" class="text-[11px] font-mono font-black ${t.running ? 'timer-running' : 'text-slate-400'}">
+                        ${formatTime(t.remaining)}
+                    </span>
+                    <span class="text-[8px] text-slate-300 font-bold uppercase">${mins}M</span>
                 </div>`;
         }
 
-        // --- Logic Engine ---
+        // --- View Logic ---
 
         function updG(g,m,t,v) { 
             const k = `g${g}m${m}`; if(!data.scores[k]) data.scores[k]=["",""]; 
@@ -290,24 +251,15 @@
                                 </div>
                                 <span class="text-xs font-bold w-20 text-right truncate">${g[p[1]]||'TBD'}</span>
                             </div>
-                            ${getMatchControlsHTML(mid, 20)}
+                            ${getTimerHTML(mid, 20)}
                         </div>`
                     }).join('')}
                 </div>`).join('');
 
-            let qual = [];
+            let qual = data.size == 12 ? [] : gStats.flatMap(s => [s[0].name, s[1].name]);
             if(data.size == 12) {
                 let thirds = gStats.map((s, i) => ({...s[2], grp: String.fromCharCode(65+i)})).sort((a,b) => b.p - a.p || b.gd - a.gd);
                 qual = [gStats[0][0].name, gStats[1][0].name, gStats[2][0].name, gStats[0][1].name, gStats[1][1].name, gStats[2][1].name, (thirds[0]||{}).name, (thirds[1]||{}).name];
-                document.getElementById('wildcard-area').classList.remove('hidden');
-                document.getElementById('wildcard-list').innerHTML = thirds.map((t, i) => `
-                    <div class="flex justify-between items-center text-[11px] p-2 ${i<2?'wildcard-row rounded-lg':''} font-bold">
-                        <span>Group ${t.grp}: ${t.name || '---'}</span>
-                        <span>${t.p}pts (${t.gd})</span>
-                    </div>`).join('');
-            } else {
-                qual = gStats.flatMap(s => [s[0].name, s[1].name]);
-                document.getElementById('wildcard-area').classList.add('hidden');
             }
 
             const wins = {};
@@ -327,7 +279,7 @@
                             </div>
                             <span class="text-[11px] font-bold text-right truncate w-24 ${w==t2?'text-orange-500':''}">${t2||'TBD'}</span>
                         </div>
-                        ${getMatchControlsHTML(id, time)}
+                        ${getTimerHTML(id, time)}
                     </div>
                 </div>`;
             };
@@ -342,7 +294,7 @@
             
             document.getElementById('bracket-container').innerHTML = bh;
             if(isGuest) {
-                document.querySelectorAll('input, select').forEach(i => i.disabled = true);
+                document.querySelectorAll('input').forEach(i => i.disabled = true);
                 document.querySelectorAll('.admin-only').forEach(e => e.remove());
             }
         }
