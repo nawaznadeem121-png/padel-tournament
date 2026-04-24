@@ -15,6 +15,8 @@
         .active-tab-btn { border-bottom: 3px solid #fb923c; color: #fb923c; }
         .read-only input { pointer-events: none; background: #f1f5f9; border: none; }
         .read-only .admin-only { display: none !important; }
+        .qualifying-row { background-color: #f0fdf4; font-weight: 800; color: #166534; }
+        .wildcard-row { background-color: #fffbeb; font-weight: 800; color: #92400e; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
@@ -25,7 +27,7 @@
                 <img src="logo.PNG" alt="The Court Club" class="h-10 w-auto object-contain">
                 <span class="font-black text-xl tracking-tighter uppercase"><span class="text-orange-200">The Court Club</span></span>
             </div>
-            <div id="view-mode-tag" class="hidden bg-orange-500 text-[10px] px-2 py-1 rounded font-black uppercase">Guest Mode</div>
+            <div id="view-mode-tag" class="hidden bg-orange-500 text-[10px] px-2 py-1 rounded font-black uppercase">Guest Mode (Read Only)</div>
         </div>
     </header>
 
@@ -57,12 +59,22 @@
             </div>
 
             <div id="t-rankings" class="tournament-tab">
-                <div class="flex justify-end mb-4 admin-only">
-                    <button onclick="copyShareLink()" class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg shadow uppercase tracking-wider">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xs font-black uppercase text-slate-400 tracking-widest">Live Rankings</h2>
+                    <button onclick="copyShareLink()" class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg shadow uppercase tracking-wider admin-only">
                         <i class="fa-solid fa-share-nodes mr-2"></i>Share Live Link
                     </button>
                 </div>
+                
                 <div id="leaderboard-container" class="space-y-6"></div>
+                
+                <div id="wildcard-section" class="mt-8 hidden">
+                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 shadow-sm">
+                        <h3 class="font-black text-[10px] text-amber-600 mb-3 uppercase tracking-widest text-center">Best 3rd Place Runners-Up</h3>
+                        <div id="wildcard-list" class="space-y-2"></div>
+                        <p class="text-[8px] text-amber-500 mt-3 text-center uppercase font-bold">Top 2 Qualify for Quarter Finals</p>
+                    </div>
+                </div>
             </div>
             
             <div id="t-finals" class="tournament-tab">
@@ -143,27 +155,50 @@
             });
 
             let qualifiers = [];
+            let bestThirds = [];
+
             if(activeData.teamCount == 12) {
-                let thirds = gStats.map((s, i) => ({...s[2], group: i})).sort((a,b) => b.p - a.p || b.gd - a.gd);
+                // Get 3rd place from each of the 3 groups
+                let thirds = gStats.map((s, i) => ({...s[2], group: String.fromCharCode(65+i)})).sort((a,b) => b.p - a.p || b.gd - a.gd);
+                bestThirds = thirds;
+                // Top 2 from each group (6 teams) + top 2 thirds (2 teams) = 8 for QF
                 qualifiers = [gStats[0][0].name, gStats[1][0].name, gStats[2][0].name, gStats[0][1].name, gStats[1][1].name, gStats[2][1].name, thirds[0].name, thirds[1].name];
-            } else if(activeData.teamCount == 16) {
-                qualifiers = gStats.flatMap(s => [s[0].name, s[1].name]);
             } else {
                 qualifiers = gStats.flatMap(s => [s[0].name, s[1].name]);
             }
-            return { gStats, qualifiers };
+            return { gStats, qualifiers, bestThirds };
         }
 
         function renderTables(res) {
             const cont = document.getElementById('leaderboard-container');
             cont.innerHTML = res.gStats.map((s, i) => `
                 <div class="bg-white p-4 rounded-xl shadow-sm border">
-                    <h3 class="font-black text-[10px] text-orange-500 mb-2 uppercase tracking-widest">Group ${String.fromCharCode(65+i)}</h3>
+                    <h3 class="font-black text-[10px] text-indigo-900 mb-2 uppercase tracking-widest">Group ${String.fromCharCode(65+i)}</h3>
                     <table class="w-full text-xs">
-                        ${s.map((t, idx) => `<tr class="${idx<2?'font-bold':''}"><td class="py-1">${t.name||'---'}</td><td class="text-right">${t.p}pts (${t.gd})</td></tr>`).join('')}
+                        ${s.map((t, idx) => `
+                            <tr class="${idx < 2 ? 'qualifying-row' : ''}">
+                                <td class="py-2 px-2 rounded-l-lg">${t.name || '---'}</td>
+                                <td class="text-right py-2 px-2 rounded-r-lg">${t.p}pts (${t.gd})</td>
+                            </tr>
+                        `).join('')}
                     </table>
                 </div>
             `).join('');
+
+            const wcSection = document.getElementById('wildcard-section');
+            const wcList = document.getElementById('wildcard-list');
+            
+            if(activeData.teamCount == 12 && res.bestThirds.length > 0) {
+                wcSection.classList.remove('hidden');
+                wcList.innerHTML = res.bestThirds.map((w, i) => `
+                    <div class="flex justify-between items-center p-3 rounded-lg border border-amber-100 ${i < 2 ? 'wildcard-row' : 'bg-white text-slate-400'}">
+                        <span class="text-xs uppercase tracking-tight">${w.name || '---'} (Grp ${w.group})</span>
+                        <span class="text-xs">${w.p}pts (${w.gd})</span>
+                    </div>
+                `).join('');
+            } else {
+                wcSection.classList.add('hidden');
+            }
         }
 
         function getWinner(id, t1, t2) {
@@ -182,37 +217,36 @@
                 wins[id] = w;
                 return `
                 <div class="mb-4">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">${label}</p>
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">${label}</p>
                     <div class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm">
                         <span class="text-[11px] font-bold truncate w-24 ${w && w==t1?'text-orange-500':''}">${t1||'TBD'}</span>
                         <div class="flex gap-1">
-                            <input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
-                            <input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                            <input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold shadow-inner">
+                            <input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold shadow-inner">
                         </div>
                         <span class="text-[11px] font-bold text-right truncate w-24 ${w && w==t2?'text-orange-500':''}">${t2||'TBD'}</span>
                     </div>
                 </div>`;
             };
 
-            let h = `<p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Knockout Stage</p>`;
+            let h = `<p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Knockout Phase</p>`;
             
             if(activeData.teamCount < 32) {
-                h += matchHTML("QF1", qual[0], qual[7], "QF 1") + matchHTML("QF2", qual[1], qual[6], "QF 2") +
-                     matchHTML("QF3", qual[2], qual[5], "QF 3") + matchHTML("QF4", qual[3], qual[4], "QF 4");
+                h += matchHTML("QF1", qual[0], qual[7], "Quarter Final 1") + matchHTML("QF2", qual[1], qual[6], "Quarter Final 2") +
+                     matchHTML("QF3", qual[2], qual[5], "Quarter Final 3") + matchHTML("QF4", qual[3], qual[4], "Quarter Final 4");
                 h += `<div class="h-px bg-slate-200 my-6"></div>`;
                 h += matchHTML("SF1", wins.QF1, wins.QF4, "Semi Final 1") + matchHTML("SF2", wins.QF2, wins.QF3, "Semi Final 2");
             } else {
-                // Simplified 32-team logic for brevity
                 for(let i=1; i<=8; i++) h += matchHTML(`R16_${i}`, qual[i*2-2], qual[i*2-1], `R16 Match ${i}`);
                 h += `<div class="h-px bg-slate-200 my-6"></div>`;
-                h += matchHTML("QF1", wins.R16_1, wins.R16_8, "QF 1") + matchHTML("QF2", wins.R16_2, wins.R16_7, "QF 2");
-                h += matchHTML("QF3", wins.R16_3, wins.R16_6, "QF 3") + matchHTML("QF4", wins.R16_4, wins.R16_5, "QF 4");
+                h += matchHTML("QF1", wins.R16_1, wins.R16_8, "QF 1") + matchHTML("QF2", wins.R16_2, wins.R16_7, "QF 2") +
+                     matchHTML("QF3", wins.R16_3, wins.R16_6, "QF 3") + matchHTML("QF4", wins.R16_4, wins.R16_5, "QF 4");
                 h += `<div class="h-px bg-slate-200 my-6"></div>`;
                 h += matchHTML("SF1", wins.QF1, wins.QF4, "Semi Final 1") + matchHTML("SF2", wins.QF2, wins.QF3, "Semi Final 2");
             }
 
-            h += `<div class="h-px bg-orange-200 my-6"></div>`;
-            h += matchHTML("F", wins.SF1, wins.SF2, "The Grand Final");
+            h += `<div class="py-4 border-t-2 border-orange-200 mt-6"><p class="text-center text-[10px] font-black text-orange-500 uppercase tracking-widest mb-4">Final Match</p></div>`;
+            h += matchHTML("F", wins.SF1, wins.SF2, "Championship");
             cont.innerHTML = h;
 
             if(wins.F) {
@@ -226,7 +260,7 @@
             if(!activeData.koScores[id]) activeData.koScores[id] = ["", ""];
             activeData.koScores[id][teamIdx] = val === "" ? "" : parseInt(val);
             sync();
-            refreshUI(); // Auto-populates next stage
+            refreshUI(); 
         }
 
         function updateGS(g, m, t, v) {
@@ -251,7 +285,7 @@
             const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
             cont.innerHTML = activeData.groups.map((g, gi) => `
                 <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                    <div class="bg-indigo-950 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gi)}</div>
+                    <div class="bg-indigo-950 text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest">Group ${String.fromCharCode(65+gi)} Matches</div>
                     ${pairs.map((p, mi) => {
                         const s = activeData.groupScores[`g${gi}m${mi}`] || ["",""];
                         return `<div class="flex items-center justify-between p-3 border-b last:border-0">
@@ -270,7 +304,7 @@
         function archiveTournament() {
             const db = getDB();
             db.history.unshift({
-                date: new Date().toLocaleDateString(),
+                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
                 winner: activeData.finalWinner,
                 size: activeData.teamCount
             });
@@ -279,18 +313,18 @@
             activeData.groupScores = {};
             activeData.teams = Array(activeData.teamCount).fill("");
             saveDB(db);
-            location.reload();
+            location.href = window.location.pathname; // Hard reset to clear URL params
         }
 
         function renderHistory() {
             const db = getDB();
             const list = document.getElementById('history-list');
-            if(!db.history.length) { list.innerHTML = `<p class="text-xs text-slate-400">No records found.</p>`; return; }
+            if(!db.history.length) { list.innerHTML = `<p class="text-xs text-slate-400 text-center py-10">No archives yet.</p>`; return; }
             list.innerHTML = db.history.map(h => `
                 <div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm">
                     <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase">${h.date} • ${h.size} Teams</p>
-                        <p class="font-bold text-indigo-900">🏆 ${h.winner}</p>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-tight">${h.date} • ${h.size} Teams</p>
+                        <p class="font-bold text-indigo-900">🏆 Winner: ${h.winner}</p>
                     </div>
                 </div>
             `).join('');
@@ -299,25 +333,34 @@
         function copyShareLink() {
             const state = btoa(JSON.stringify(activeData));
             const url = `${window.location.origin}${window.location.pathname}?view=${state}`;
-            navigator.clipboard.writeText(url).then(() => alert("Read-only link copied to clipboard!"));
+            navigator.clipboard.writeText(url).then(() => {
+                alert("Live Standings Link copied! Send this to the players.");
+            });
         }
 
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             if(params.has('view')) {
                 isReadOnly = true;
-                activeData = JSON.parse(atob(params.get('view')));
-                document.body.classList.add('read-only');
-                document.getElementById('view-mode-tag').classList.remove('hidden');
-                document.getElementById('tt-setup').style.display = 'none';
-                document.getElementById('tt-history').style.display = 'none';
-                renderMatches();
-                showTTab('rankings');
+                try {
+                    activeData = JSON.parse(atob(params.get('view')));
+                    document.body.classList.add('read-only');
+                    document.getElementById('view-mode-tag').classList.remove('hidden');
+                    document.getElementById('tt-setup').style.display = 'none';
+                    document.getElementById('tt-history').style.display = 'none';
+                    renderMatches();
+                    showTTab('rankings'); // Default to rankings for viewers
+                } catch(e) {
+                    console.error("Link error", e);
+                }
             } else {
                 const db = getDB();
                 activeData = db.active;
                 setTeamCount(activeData.teamCount);
-                if(activeData.generated) { renderMatches(); showTTab('groups'); }
+                if(activeData.generated) { 
+                    renderMatches(); 
+                    showTTab('groups'); 
+                }
             }
         };
     </script>
