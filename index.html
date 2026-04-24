@@ -1,4 +1,4 @@
-4<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -37,6 +37,11 @@
     </nav>
 
     <div class="p-4 max-w-md mx-auto pb-20">
+        <div id="sync-msg" class="hidden text-center py-10">
+            <i class="fa-solid fa-rotate text-orange-400 text-3xl mb-4 animate-spin"></i>
+            <p class="font-black text-slate-400 uppercase text-xs tracking-widest">Waiting for Live Data...</p>
+        </div>
+
         <div id="tab-setup" class="tournament-tab active">
             <div class="grid grid-cols-3 gap-2 mb-6">
                 <button onclick="setTeams(12)" id="sz-12" class="py-3 rounded-xl border-2 font-bold text-orange-700 border-orange-400 bg-orange-50">12 Teams</button>
@@ -44,7 +49,7 @@
                 <button onclick="setTeams(32)" id="sz-32" class="py-3 rounded-xl border-2 font-bold text-slate-400 border-slate-200">32 Teams</button>
             </div>
             <div id="team-list" class="space-y-2"></div>
-            <button onclick="startTourney()" class="w-full mt-6 bg-green-600 text-white font-black py-4 rounded-xl uppercase">Start Tournament</button>
+            <button onclick="startTourney()" class="w-full mt-6 bg-green-600 text-white font-black py-4 rounded-xl uppercase shadow-lg">Start Tournament</button>
         </div>
 
         <div id="tab-groups" class="tournament-tab">
@@ -90,43 +95,60 @@
 
         function startLive() {
             if(!data.room) data.room = 'courtclub_' + Math.random().toString(36).substr(2, 9);
-            // We use a permanent web mirror so the link isn't "blank"
-            const link = `https://ntfy.sh/${data.room}/publish`; 
             const shareableUrl = window.location.href.split('?')[0] + '?room=' + data.room;
-            
             navigator.clipboard.writeText(shareableUrl);
             document.getElementById('live-indicator').classList.remove('hidden');
             document.getElementById('live-btn').innerText = "Link Copied!";
-            alert("LIVE ACTIVE!\n\nPlayers can now follow along. Any score you enter will update their screen automatically.");
-            save();
+            
+            // Start listening for "Handshake" requests from new players
+            listenForJoinRequests();
+            
+            alert("LIVE ACTIVE! Share link copied.\n\nNow, when someone opens the link, your screen will automatically push the current scores to them.");
+            save(); 
         }
 
         async function save() {
-            localStorage.setItem('courtclub_final', JSON.stringify(data));
+            localStorage.setItem('courtclub_v4', JSON.stringify(data));
             if(data.room && !isGuest) {
                 try {
                     await fetch(`https://ntfy.sh/${data.room}`, {
                         method: 'POST',
-                        body: JSON.stringify(data),
-                        headers: { 'Title': 'Tournament Update' }
+                        body: JSON.stringify(data)
                     });
-                } catch(e) { console.log("Network lag..."); }
+                } catch(e) { console.log("Push failed"); }
             }
             refresh();
         }
 
+        // ADMIN: Listen for when a guest joins so we can push data to them immediately
+        function listenForJoinRequests() {
+            const joinSource = new EventSource(`https://ntfy.sh/${data.room}_join/sse`);
+            joinSource.onmessage = () => {
+                console.log("New player joined! Syncing data...");
+                save(); // Re-push current data
+            };
+        }
+
+        // GUEST: Listen for scores and shout that we've joined
         function listenForUpdates(room) {
+            document.getElementById('sync-msg').classList.remove('hidden');
+            
+            // 1. Shout "I'm here!" to the admin
+            fetch(`https://ntfy.sh/${room}_join`, { method: 'POST', body: 'join' });
+
+            // 2. Listen for the data push
             const eventSource = new EventSource(`https://ntfy.sh/${room}/sse`);
             eventSource.onmessage = (e) => {
                 try {
                     const payload = JSON.parse(e.data);
                     if(payload.message) {
                         data = JSON.parse(payload.message);
-                        localStorage.setItem('courtclub_final', JSON.stringify(data));
+                        localStorage.setItem('courtclub_v4', JSON.stringify(data));
+                        document.getElementById('sync-msg').classList.add('hidden');
                         refresh();
                         renderMatches();
                     }
-                } catch(err) { console.error("Sync error"); }
+                } catch(err) { }
             };
         }
 
@@ -166,7 +188,7 @@
         }
 
         function refresh() {
-            if(!data.groups.length) return;
+            if(!data.groups || !data.groups.length) return;
             let gStats = data.groups.map((g, i) => {
                 let s = g.map(name => ({ name, p: 0, gd: 0 }));
                 const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
@@ -216,8 +238,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const roomID = urlParams.get('room');
             
-            // Check memory first
-            const saved = localStorage.getItem('courtclub_final');
+            const saved = localStorage.getItem('courtclub_v4');
             if(saved) data = JSON.parse(saved);
 
             if(roomID) {
@@ -230,7 +251,11 @@
                 showTab('rankings');
             } else {
                 setTeams(data.size);
-                if(data.groups.length > 0) { renderMatches(); showTab('groups'); }
+                if(data.groups.length > 0) { 
+                    renderMatches(); 
+                    showTab('groups');
+                    if(data.room) listenForJoinRequests(); // Resume listening if page refreshed
+                }
             }
         };
     </script>
