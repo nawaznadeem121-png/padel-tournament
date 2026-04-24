@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>The Court Club</title>
+    <title>The Court Club | Tournament</title>
     <link rel="icon" type="image/png" href="logo.PNG">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -12,7 +12,9 @@
         .tournament-tab.active { display: block; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         input { font-size: 16px !important; touch-action: manipulation; }
-        .active-tab-btn { border-bottom: 3px solid #4f46e5; color: #4f46e5; }
+        .active-tab-btn { border-bottom: 3px solid #fb923c; color: #fb923c; }
+        .read-only input { pointer-events: none; background: #f1f5f9; border: none; }
+        .read-only .admin-only { display: none !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
@@ -23,19 +25,17 @@
                 <img src="logo.PNG" alt="The Court Club" class="h-10 w-auto object-contain">
                 <span class="font-black text-xl tracking-tighter uppercase"><span class="text-orange-200">The Court Club</span></span>
             </div>
-            <div class="hidden md:block text-[10px] font-bold uppercase tracking-widest text-orange-200">
-                Unleash Your Potential on the Court.
-            </div>
+            <div id="view-mode-tag" class="hidden bg-orange-500 text-[10px] px-2 py-1 rounded font-black uppercase">Guest Mode</div>
         </div>
     </header>
 
     <main id="tournament-dashboard">
-        <nav class="flex bg-white border-b sticky top-0 z-30 overflow-x-auto no-scrollbar shadow-sm">
-            <button onclick="showTTab('setup')" id="tt-setup" class="flex-1 px-4 py-4 text-[10px] font-black uppercase transition-all">Setup</button>
+        <nav id="main-nav" class="flex bg-white border-b sticky top-0 z-30 overflow-x-auto no-scrollbar shadow-sm">
+            <button onclick="showTTab('setup')" id="tt-setup" class="flex-1 px-4 py-4 text-[10px] font-black uppercase transition-all admin-only">Setup</button>
             <button onclick="showTTab('groups')" id="tt-groups" class="flex-1 px-4 py-4 text-[10px] font-black uppercase transition-all">Scores</button>
             <button onclick="showTTab('rankings')" id="tt-rankings" class="flex-1 px-4 py-4 text-[10px] font-black uppercase transition-all">Standings</button>
             <button onclick="showTTab('finals')" id="tt-finals" class="flex-1 px-4 py-4 text-[10px] font-black uppercase transition-all">Finals</button>
-            <button onclick="showTTab('history')" id="tt-history" class="flex-1 px-4 py-4 text-[10px] font-black uppercase transition-all">History</button>
+            <button onclick="showTTab('history')" id="tt-history" class="flex-1 px-4 py-4 text-[10px] font-black uppercase transition-all admin-only">History</button>
         </nav>
 
         <div class="p-4 max-w-md mx-auto pb-20">
@@ -43,15 +43,13 @@
                 <div class="mb-6">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">Tournament Size</label>
                     <div class="grid grid-cols-3 gap-2">
-                        <button onclick="setTeamCount(12)" id="btn-12" class="py-3 rounded-xl border-2 font-bold text-sm transition-all border-indigo-600 bg-indigo-50 text-indigo-700">12 Teams</button>
+                        <button onclick="setTeamCount(12)" id="btn-12" class="py-3 rounded-xl border-2 font-bold text-sm transition-all border-orange-400 bg-orange-50 text-orange-700">12 Teams</button>
                         <button onclick="setTeamCount(16)" id="btn-16" class="py-3 rounded-xl border-2 font-bold text-sm transition-all border-slate-200 text-slate-500">16 Teams</button>
                         <button onclick="setTeamCount(32)" id="btn-32" class="py-3 rounded-xl border-2 font-bold text-sm transition-all border-slate-200 text-slate-500">32 Teams</button>
                     </div>
                 </div>
-                
-                <h2 id="setup-title" class="text-xs font-black uppercase text-slate-400 mb-4 tracking-widest">Enter 12 Team Names</h2>
                 <div id="team-inputs" class="grid gap-2"></div>
-                <button onclick="generateTournament()" class="w-full mt-6 bg-green-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-sm tracking-widest hover:bg-green-500 transition">Lock & Start</button>
+                <button onclick="generateTournament()" class="w-full mt-6 bg-green-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-sm tracking-widest hover:bg-green-500 transition">Start Tournament</button>
             </div>
 
             <div id="t-groups" class="tournament-tab">
@@ -59,62 +57,59 @@
             </div>
 
             <div id="t-rankings" class="tournament-tab">
+                <div class="flex justify-end mb-4 admin-only">
+                    <button onclick="copyShareLink()" class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg shadow uppercase tracking-wider">
+                        <i class="fa-solid fa-share-nodes mr-2"></i>Share Live Link
+                    </button>
+                </div>
                 <div id="leaderboard-container" class="space-y-6"></div>
-                <div id="wildcard-list" class="mt-6 hidden bg-amber-50 p-4 rounded-xl border border-amber-200"></div>
             </div>
             
             <div id="t-finals" class="tournament-tab">
                 <div id="bracket-container" class="space-y-8"></div>
-                <div id="archive-button-container" class="mt-10 hidden">
-                    <button onclick="archiveTournament()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-xl hover:bg-indigo-500 transition uppercase tracking-widest text-sm">Complete & Archive</button>
+                <div id="archive-button-container" class="mt-10 hidden admin-only">
+                    <button onclick="archiveTournament()" class="w-full bg-orange-500 text-white font-black py-4 rounded-xl shadow-xl hover:bg-orange-400 transition uppercase tracking-widest text-sm">
+                        Complete & Archive Result
+                    </button>
                 </div>
             </div>
 
             <div id="t-history" class="tournament-tab">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-black text-xs uppercase tracking-widest">Saved Archives</h3>
-                    <button onclick="exportDB()" class="text-[9px] bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-bold">EXPORT DATA</button>
-                </div>
+                <h3 class="font-black text-xs uppercase tracking-widest mb-4">Past Tournaments</h3>
                 <div id="history-list" class="space-y-3"></div>
             </div>
         </div>
     </main>
 
     <script>
-        const USER_KEY = "ClubManager";
+        const USER_KEY = "TheCourtClub_DB";
+        let isReadOnly = false;
         let activeData = { 
-            teamCount: 12,
-            teams: Array(12).fill(""), 
-            groups: [], 
-            groupScores: {}, 
-            koScores: {}, 
-            finalWinner: null, 
-            generated: false 
+            teamCount: 12, teams: Array(12).fill(""), 
+            groups: [], groupScores: {}, koScores: {}, generated: false 
         };
 
-        const getDB = () => JSON.parse(localStorage.getItem('padelDB')) || { [USER_KEY]: { history: [], active: activeData } };
-        const saveDB = (db) => localStorage.setItem('padelDB', JSON.stringify(db));
+        const getDB = () => JSON.parse(localStorage.getItem(USER_KEY)) || { history: [], active: activeData };
+        const saveDB = (db) => localStorage.setItem(USER_KEY, JSON.stringify(db));
 
         function setTeamCount(count) {
-            if(activeData.generated && !confirm("Changing size will reset the current tournament. Continue?")) return;
-            
             activeData.teamCount = count;
             activeData.teams = Array(count).fill("");
-            activeData.generated = false;
-            activeData.groupScores = {};
-            activeData.koScores = {};
-            
             [12, 16, 32].forEach(c => {
-                const btn = document.getElementById(`btn-${c}`);
-                btn.className = (c === count) 
-                    ? "py-3 rounded-xl border-2 font-bold text-sm transition-all border-indigo-600 bg-indigo-50 text-indigo-700"
-                    : "py-3 rounded-xl border-2 font-bold text-sm transition-all border-slate-200 text-slate-500";
+                const b = document.getElementById(`btn-${c}`);
+                b.className = (c === count) ? "py-3 rounded-xl border-2 font-bold text-sm border-orange-400 bg-orange-50 text-orange-700" : "py-3 rounded-xl border-2 font-bold text-sm border-slate-200 text-slate-500";
             });
-            
-            document.getElementById('setup-title').innerText = `Enter ${count} Team Names`;
             initInputs();
-            sync();
         }
+
+        function initInputs() {
+            const cont = document.getElementById('team-inputs');
+            cont.innerHTML = activeData.teams.map((t, i) => `
+                <input type="text" value="${t}" onchange="activeData.teams[${i}]=this.value;sync()" placeholder="Team ${i+1}" class="w-full p-4 rounded-xl border border-slate-200 font-bold shadow-sm outline-none focus:border-orange-400">
+            `).join('');
+        }
+
+        function sync() { if(!isReadOnly) { const db = getDB(); db.active = activeData; saveDB(db); } }
 
         function showTTab(tabId) {
             document.querySelectorAll('.tournament-tab').forEach(t => t.classList.remove('active'));
@@ -122,217 +117,209 @@
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab-btn'));
             const btn = document.getElementById('tt-' + tabId);
             if(btn) btn.classList.add('active-tab-btn');
-            if(tabId !== 'setup') refreshUI();
+            refreshUI();
             window.scrollTo(0, 0);
         }
 
-        function sync() {
-            const db = getDB();
-            db[USER_KEY].active = activeData;
-            saveDB(db);
-        }
-
-        function initInputs() {
-            const cont = document.getElementById('team-inputs'); 
-            cont.innerHTML = "";
-            activeData.teams.forEach((t, i) => {
-                cont.innerHTML += `<input type="text" value="${t}" onchange="activeData.teams[${i}]=this.value;sync()" placeholder="Team ${i+1}" class="w-full p-4 rounded-xl border border-slate-200 outline-none font-bold shadow-sm focus:border-indigo-400">`;
-            });
-        }
-
-        function generateTournament() {
-            const numGroups = activeData.teamCount / 4;
-            activeData.groups = [];
-            for(let i=0; i<numGroups; i++) {
-                activeData.groups.push(activeData.teams.slice(i*4, (i*4)+4));
-            }
-            activeData.generated = true; 
-            activeData.groupScores = {}; 
-            activeData.koScores = {};
-            sync(); 
-            renderMatches(); 
-            showTTab('groups');
-        }
-
-        function renderMatches() {
-            const cont = document.getElementById('group-schedule'); if(!cont) return;
-            cont.innerHTML = "";
-            const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
-            activeData.groups.forEach((g, gIdx) => {
-                let h = `<div class="bg-white rounded-2xl shadow-sm border mb-4 overflow-hidden"><div class="bg-indigo-900 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gIdx)}</div>`;
-                pairs.forEach((p, mIdx) => {
-                    const s = activeData.groupScores[`g${gIdx}m${mIdx}`] || ["", ""];
-                    h += `<div class="flex items-center justify-between p-3 border-b last:border-0">
-                        <span class="text-[10px] font-bold w-20 truncate">${g[p[0]]||'TBD'}</span>
-                        <div class="flex gap-1">
-                            <input type="number" value="${s[0]}" onchange="updateGS(${gIdx},${mIdx},0,this.value)" class="w-12 h-12 text-center bg-slate-50 rounded-lg font-bold border border-transparent focus:border-indigo-300">
-                            <input type="number" value="${s[1]}" onchange="updateGS(${gIdx},${mIdx},1,this.value)" class="w-12 h-12 text-center bg-slate-50 rounded-lg font-bold border border-transparent focus:border-indigo-300">
-                        </div>
-                        <span class="text-[10px] font-bold w-20 text-right truncate">${g[p[1]]||'TBD'}</span>
-                    </div>`;
-                });
-                cont.innerHTML += h + `</div>`;
-            });
-        }
-
-        function updateGS(g, m, t, v) {
-            const k = `g${g}m${m}`; 
-            if(!activeData.groupScores[k]) activeData.groupScores[k] = ["",""];
-            activeData.groupScores[k][t] = v === "" ? "" : parseInt(v); 
-            sync();
-        }
-
         function refreshUI() {
-            const res = calculate();
+            const res = calculateStandings();
             renderTables(res);
-            renderBracket(res.qual);
+            renderBracket(res.qualifiers);
             renderHistory();
         }
 
-        function calculate() {
-            let gStats = []; 
-            let allThirds = [];
-            activeData.groups.forEach((g, i) => {
+        function calculateStandings() {
+            let gStats = activeData.groups.map((g, i) => {
                 let stats = g.map(name => ({ name, p: 0, gd: 0 }));
-                [[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]].forEach((p, m) => {
+                const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
+                pairs.forEach((p, m) => {
                     const s = activeData.groupScores[`g${i}m${m}`];
                     if(s && s[0] !== "" && s[1] !== "") {
                         stats[p[0]].gd += (s[0]-s[1]); stats[p[1]].gd += (s[1]-s[0]);
-                        if(s[0]>s[1]) stats[p[0]].p += 2; else if(s[1]>s[0]) stats[p[1]].p += 2;
+                        if(s[0]>s[1]) stats[p[0]].p += 3; else if(s[1]>s[0]) stats[p[1]].p += 3; else { stats[p[0]].p += 1; stats[p[1]].p += 1; }
                     }
                 });
-                stats.sort((a,b) => b.p - a.p || b.gd - a.gd);
-                gStats.push(stats); 
-                if(activeData.teamCount === 12) allThirds.push({...stats[2], group: i});
+                return stats.sort((a,b) => b.p - a.p || b.gd - a.gd);
             });
 
-            let qual = {};
-            if(activeData.teamCount === 12) {
-                allThirds.sort((a,b) => b.p - a.p || b.gd - a.gd);
-                const wc = allThirds.slice(0,2);
-                qual = { QF1:[gStats[0][0].name, wc[1].name], QF2:[gStats[1][0].name, wc[0].name], QF3:[gStats[2][0].name, gStats[0][1].name], QF4:[gStats[1][1].name, gStats[2][1].name] };
-            } else if(activeData.teamCount === 16) {
-                qual = { QF1:[gStats[0][0].name, gStats[1][1].name], QF2:[gStats[2][0].name, gStats[3][1].name], QF3:[gStats[1][0].name, gStats[0][1].name], QF4:[gStats[3][0].name, gStats[2][1].name] };
-            } else if(activeData.teamCount === 32) {
-                qual = { 
-                    R1:[gStats[0][0].name, gStats[1][1].name], R2:[gStats[2][0].name, gStats[3][1].name], R3:[gStats[4][0].name, gStats[5][1].name], R4:[gStats[6][0].name, gStats[7][1].name],
-                    R5:[gStats[1][0].name, gStats[0][1].name], R6:[gStats[3][0].name, gStats[2][1].name], R7:[gStats[5][0].name, gStats[4][1].name], R8:[gStats[7][0].name, gStats[6][1].name]
-                };
+            let qualifiers = [];
+            if(activeData.teamCount == 12) {
+                let thirds = gStats.map((s, i) => ({...s[2], group: i})).sort((a,b) => b.p - a.p || b.gd - a.gd);
+                qualifiers = [gStats[0][0].name, gStats[1][0].name, gStats[2][0].name, gStats[0][1].name, gStats[1][1].name, gStats[2][1].name, thirds[0].name, thirds[1].name];
+            } else if(activeData.teamCount == 16) {
+                qualifiers = gStats.flatMap(s => [s[0].name, s[1].name]);
+            } else {
+                qualifiers = gStats.flatMap(s => [s[0].name, s[1].name]);
             }
-            return { gStats, qual, wc: (activeData.teamCount === 12 ? allThirds.slice(0,2) : []) };
+            return { gStats, qualifiers };
         }
 
         function renderTables(res) {
-            const cont = document.getElementById('leaderboard-container'); cont.innerHTML = "";
-            res.gStats.forEach((s, i) => {
-                let h = `<div class="bg-white p-4 rounded-xl shadow-sm border mb-4"><h3 class="font-black text-[10px] text-indigo-600 mb-2 uppercase">Group ${String.fromCharCode(65+i)}</h3><table class="w-full text-xs">`;
-                s.forEach((t, idx) => h += `<tr class="${idx<2?'font-bold text-green-600':''}"><td class="py-1">${t.name||'---'}</td><td class="text-right">${t.p}pts (${t.gd>0?'+':''}${t.gd})</td></tr>`);
-                cont.innerHTML += h + `</table></div>`;
-            });
-            const wcList = document.getElementById('wildcard-list');
-            if(activeData.teamCount === 12) {
-                wcList.classList.remove('hidden');
-                wcList.innerHTML = `<h3 class="font-black text-[10px] text-amber-600 mb-2 uppercase text-center">Top Wildcards</h3>`;
-                res.wc.forEach((w, i) => wcList.innerHTML += `<div class="flex justify-between text-xs font-bold py-1 border-b border-amber-100 last:border-0"><span>${i+1}. ${w.name||'---'}</span><span>${w.p}pts</span></div>`);
-            } else { wcList.classList.add('hidden'); }
+            const cont = document.getElementById('leaderboard-container');
+            cont.innerHTML = res.gStats.map((s, i) => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border">
+                    <h3 class="font-black text-[10px] text-orange-500 mb-2 uppercase tracking-widest">Group ${String.fromCharCode(65+i)}</h3>
+                    <table class="w-full text-xs">
+                        ${s.map((t, idx) => `<tr class="${idx<2?'font-bold':''}"><td class="py-1">${t.name||'---'}</td><td class="text-right">${t.p}pts (${t.gd})</td></tr>`).join('')}
+                    </table>
+                </div>
+            `).join('');
+        }
+
+        function getWinner(id, t1, t2) {
+            const s = activeData.koScores[id];
+            if(!s || s[0] === "" || s[1] === "" || !t1 || !t2) return null;
+            return s[0] > s[1] ? t1 : t2;
         }
 
         function renderBracket(qual) {
             const wins = {};
             const cont = document.getElementById('bracket-container');
-            const createMatch = (id, t1, t2, label) => {
+            
+            const matchHTML = (id, t1, t2, label) => {
                 const s = activeData.koScores[id] || ["", ""];
-                const w = (t1 && t2 && s[0] !== "" && s[1] !== "") ? (s[0]>s[1]?t1:t2) : null;
+                const w = getWinner(id, t1, t2);
                 wins[id] = w;
                 return `
                 <div class="mb-4">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">${label}</p>
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">${label}</p>
                     <div class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm">
-                        <span class="text-[11px] font-bold truncate w-24 ${w==t1?'text-green-600':''}">${t1||'TBD'}</span>
+                        <span class="text-[11px] font-bold truncate w-24 ${w && w==t1?'text-orange-500':''}">${t1||'TBD'}</span>
                         <div class="flex gap-1">
-                            <input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-12 h-12 text-center bg-slate-50 border border-transparent rounded-lg font-bold focus:border-indigo-400">
-                            <input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-12 h-12 text-center bg-slate-50 border border-transparent rounded-lg font-bold focus:border-indigo-400">
+                            <input type="number" value="${s[0]}" onchange="updateKS('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                            <input type="number" value="${s[1]}" onchange="updateKS('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
                         </div>
-                        <span class="text-[11px] font-bold text-right truncate w-24 ${w==t2?'text-green-600':''}">${t2||'TBD'}</span>
+                        <span class="text-[11px] font-bold text-right truncate w-24 ${w && w==t2?'text-orange-500':''}">${t2||'TBD'}</span>
                     </div>
                 </div>`;
             };
+
+            let h = `<p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Knockout Stage</p>`;
             
-            let html = "";
-            if(activeData.teamCount === 32) {
-                html += `<p class="text-center text-[10px] font-black text-indigo-400 uppercase tracking-widest">Round of 16</p>`;
-                for(let i=1; i<=8; i++) html += createMatch(`R${i}`, qual[`R${i}`][0], qual[`R${i}`][1], `Match ${i}`);
-                html += `<div class="py-4 border-t my-4"><p class="text-center text-[10px] font-black text-indigo-400 uppercase tracking-widest">Quarter-Finals</p></div>`;
-                html += createMatch("QF1", wins.R1, wins.R2, "QF 1") + createMatch("QF2", wins.R3, wins.R4, "QF 2") + createMatch("QF3", wins.R5, wins.R6, "QF 3") + createMatch("QF4", wins.R7, wins.R8, "QF 4");
+            if(activeData.teamCount < 32) {
+                h += matchHTML("QF1", qual[0], qual[7], "QF 1") + matchHTML("QF2", qual[1], qual[6], "QF 2") +
+                     matchHTML("QF3", qual[2], qual[5], "QF 3") + matchHTML("QF4", qual[3], qual[4], "QF 4");
+                h += `<div class="h-px bg-slate-200 my-6"></div>`;
+                h += matchHTML("SF1", wins.QF1, wins.QF4, "Semi Final 1") + matchHTML("SF2", wins.QF2, wins.QF3, "Semi Final 2");
             } else {
-                html += `<p class="text-center text-[10px] font-black text-indigo-400 uppercase tracking-widest">Quarter-Finals</p>`;
-                html += createMatch("QF1", qual.QF1[0], qual.QF1[1], "QF 1") + createMatch("QF2", qual.QF2[0], qual.QF2[1], "QF 2") + createMatch("QF3", qual.QF3[0], qual.QF3[1], "QF 3") + createMatch("QF4", qual.QF4[0], qual.QF4[1], "QF 4");
+                // Simplified 32-team logic for brevity
+                for(let i=1; i<=8; i++) h += matchHTML(`R16_${i}`, qual[i*2-2], qual[i*2-1], `R16 Match ${i}`);
+                h += `<div class="h-px bg-slate-200 my-6"></div>`;
+                h += matchHTML("QF1", wins.R16_1, wins.R16_8, "QF 1") + matchHTML("QF2", wins.R16_2, wins.R16_7, "QF 2");
+                h += matchHTML("QF3", wins.R16_3, wins.R16_6, "QF 3") + matchHTML("QF4", wins.R16_4, wins.R16_5, "QF 4");
+                h += `<div class="h-px bg-slate-200 my-6"></div>`;
+                h += matchHTML("SF1", wins.QF1, wins.QF4, "Semi Final 1") + matchHTML("SF2", wins.QF2, wins.QF3, "Semi Final 2");
             }
 
-            html += `<div class="py-4 border-t my-4"><p class="text-center text-[10px] font-black text-indigo-400 uppercase tracking-widest">Semi-Finals</p></div>`;
-            html += createMatch("SF1", wins.QF1, wins.QF2, "SF 1") + createMatch("SF2", wins.QF3, wins.QF4, "SF 2");
-            html += `<div class="py-4 border-t my-4"><p class="text-center text-[10px] font-black text-amber-500 uppercase tracking-widest">Grand Final</p></div>`;
-            html += createMatch("F", wins.SF1, wins.SF2, "Championship");
+            h += `<div class="h-px bg-orange-200 my-6"></div>`;
+            h += matchHTML("F", wins.SF1, wins.SF2, "The Grand Final");
+            cont.innerHTML = h;
 
-            cont.innerHTML = html;
-            const arcBtn = document.getElementById('archive-button-container');
-            if(wins.F) { activeData.finalWinner = wins.F; arcBtn.classList.remove('hidden'); }
-            else { arcBtn.classList.add('hidden'); }
+            if(wins.F) {
+                activeData.finalWinner = wins.F;
+                document.getElementById('archive-button-container').classList.remove('hidden');
+            }
+            if(isReadOnly) document.querySelectorAll('input').forEach(i => i.disabled = true);
         }
 
-        function updateKS(id, t, v) {
-            if(!activeData.koScores[id]) activeData.koScores[id] = ["",""];
-            activeData.koScores[id][t] = v === "" ? "" : parseInt(v); 
-            sync(); 
+        function updateKS(id, teamIdx, val) {
+            if(!activeData.koScores[id]) activeData.koScores[id] = ["", ""];
+            activeData.koScores[id][teamIdx] = val === "" ? "" : parseInt(val);
+            sync();
+            refreshUI(); // Auto-populates next stage
+        }
+
+        function updateGS(g, m, t, v) {
+            const k = `g${g}m${m}`;
+            if(!activeData.groupScores[k]) activeData.groupScores[k] = ["",""];
+            activeData.groupScores[k][t] = v === "" ? "" : parseInt(v);
+            sync();
+        }
+
+        function generateTournament() {
+            const numGroups = activeData.teamCount / 4;
+            activeData.groups = [];
+            for(let i=0; i<numGroups; i++) activeData.groups.push(activeData.teams.slice(i*4, i*4+4));
+            activeData.generated = true;
+            sync();
+            renderMatches();
+            showTTab('groups');
+        }
+
+        function renderMatches() {
+            const cont = document.getElementById('group-schedule');
+            const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
+            cont.innerHTML = activeData.groups.map((g, gi) => `
+                <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                    <div class="bg-indigo-950 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gi)}</div>
+                    ${pairs.map((p, mi) => {
+                        const s = activeData.groupScores[`g${gi}m${mi}`] || ["",""];
+                        return `<div class="flex items-center justify-between p-3 border-b last:border-0">
+                            <span class="text-[10px] font-bold w-20 truncate">${g[p[0]]||'TBD'}</span>
+                            <div class="flex gap-1">
+                                <input type="number" value="${s[0]}" onchange="updateGS(${gi},${mi},0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                                <input type="number" value="${s[1]}" onchange="updateGS(${gi},${mi},1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                            </div>
+                            <span class="text-[10px] font-bold w-20 text-right truncate">${g[p[1]]||'TBD'}</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            `).join('');
         }
 
         function archiveTournament() {
-            if(!confirm("Archive tournament results?")) return;
             const db = getDB();
-            db[USER_KEY].history.unshift({ id: Date.now(), date: new Date().toLocaleString(), winner: activeData.finalWinner, size: activeData.teamCount });
+            db.history.unshift({
+                date: new Date().toLocaleDateString(),
+                winner: activeData.finalWinner,
+                size: activeData.teamCount
+            });
             activeData.generated = false;
+            activeData.koScores = {};
+            activeData.groupScores = {};
             activeData.teams = Array(activeData.teamCount).fill("");
-            db[USER_KEY].active = activeData;
-            saveDB(db); 
-            initInputs(); 
-            showTTab('history');
+            saveDB(db);
+            location.reload();
         }
 
         function renderHistory() {
-            const db = getDB(); const list = document.getElementById('history-list'); list.innerHTML = "";
-            if(!db[USER_KEY].history.length) return list.innerHTML = "<p class='text-center text-xs text-slate-400 py-10'>No history yet.</p>";
-            db[USER_KEY].history.forEach(h => {
-                list.innerHTML += `
-                    <div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm">
-                        <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase">${h.date} (${h.size} Teams)</p>
-                            <p class="font-bold text-slate-800">🏆 ${h.winner}</p>
-                        </div>
-                        <button onclick="deleteHistory(${h.id})" class="text-xs text-red-400 font-bold p-2">Delete</button>
-                    </div>`;
-            });
+            const db = getDB();
+            const list = document.getElementById('history-list');
+            if(!db.history.length) { list.innerHTML = `<p class="text-xs text-slate-400">No records found.</p>`; return; }
+            list.innerHTML = db.history.map(h => `
+                <div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm">
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase">${h.date} • ${h.size} Teams</p>
+                        <p class="font-bold text-indigo-900">🏆 ${h.winner}</p>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function deleteHistory(id) {
-            if(!confirm("Delete?")) return;
-            const db = getDB(); db[USER_KEY].history = db[USER_KEY].history.filter(x => x.id !== id);
-            saveDB(db); renderHistory();
-        }
-
-        function exportDB() {
-            const data = localStorage.getItem('padelDB');
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `court_club_backup.json`; a.click();
+        function copyShareLink() {
+            const state = btoa(JSON.stringify(activeData));
+            const url = `${window.location.origin}${window.location.pathname}?view=${state}`;
+            navigator.clipboard.writeText(url).then(() => alert("Read-only link copied to clipboard!"));
         }
 
         window.onload = () => {
-            const db = getDB();
-            activeData = db[USER_KEY].active;
-            setTeamCount(activeData.teamCount);
-            if(activeData.generated) renderMatches();
+            const params = new URLSearchParams(window.location.search);
+            if(params.has('view')) {
+                isReadOnly = true;
+                activeData = JSON.parse(atob(params.get('view')));
+                document.body.classList.add('read-only');
+                document.getElementById('view-mode-tag').classList.remove('hidden');
+                document.getElementById('tt-setup').style.display = 'none';
+                document.getElementById('tt-history').style.display = 'none';
+                renderMatches();
+                showTTab('rankings');
+            } else {
+                const db = getDB();
+                activeData = db.active;
+                setTeamCount(activeData.teamCount);
+                if(activeData.generated) { renderMatches(); showTTab('groups'); }
+            }
         };
     </script>
 </body>
 </html>
-
