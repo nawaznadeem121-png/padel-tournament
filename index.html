@@ -17,14 +17,8 @@
         .read-only .admin-only { display: none !important; }
         .qualifying-row { background-color: #f0fdf4; font-weight: 800; color: #166534; }
         .wildcard-row { background-color: #fffbeb; font-weight: 800; color: #92400e; }
-        
-        /* Pulse animation for live indicator */
         .pulse { animation: pulse-animation 2s infinite; }
-        @keyframes pulse-animation {
-            0% { opacity: 1; }
-            50% { opacity: 0.4; }
-            100% { opacity: 1; }
-        }
+        @keyframes pulse-animation { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
@@ -32,7 +26,7 @@
     <header class="bg-indigo-950 text-white px-4 py-3 shadow-md">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="logo.PNG" alt="The Court Club" class="h-10 w-auto object-contain">
+                <img src="logo.PNG" alt="The Court Club" class="h-10 w-auto object-contain" onerror="this.style.display='none'">
                 <span class="font-black text-xl tracking-tighter uppercase"><span class="text-orange-200">The Court Club</span></span>
             </div>
             <div id="live-status" class="hidden flex items-center gap-2 bg-red-600 px-2 py-1 rounded text-[9px] font-black uppercase">
@@ -65,10 +59,6 @@
                 <button onclick="generateTournament()" class="w-full mt-6 bg-green-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-sm tracking-widest hover:bg-green-500 transition">Start Tournament</button>
             </div>
 
-            <div id="t-groups" class="tournament-tab">
-                <div id="group-schedule" class="space-y-6"></div>
-            </div>
-
             <div id="t-rankings" class="tournament-tab">
                 <div class="flex justify-between items-center mb-4 admin-only">
                     <h2 class="text-xs font-black uppercase text-slate-400 tracking-widest">Live Rankings</h2>
@@ -87,12 +77,16 @@
                     </div>
                 </div>
             </div>
+
+            <div id="t-groups" class="tournament-tab">
+                <div id="group-schedule" class="space-y-6"></div>
+            </div>
             
             <div id="t-finals" class="tournament-tab">
                 <div id="bracket-container" class="space-y-8"></div>
                 <div id="archive-button-container" class="mt-10 hidden admin-only">
                     <button onclick="archiveTournament()" class="w-full bg-orange-500 text-white font-black py-4 rounded-xl shadow-xl hover:bg-orange-400 transition uppercase tracking-widest text-sm">
-                        Complete & Archive Result
+                        Complete & Archive
                     </button>
                 </div>
             </div>
@@ -106,7 +100,7 @@
 
     <script>
         const USER_KEY = "TheCourtClub_DB";
-        const API_URL = "https://jsonblob.com/api/jsonBlob";
+        const API_BASE = "https://jsonblob.com/api/jsonBlob";
         let isReadOnly = false;
         let liveID = null;
         
@@ -118,55 +112,64 @@
         const getDB = () => JSON.parse(localStorage.getItem(USER_KEY)) || { history: [], active: activeData };
         const saveDB = (db) => localStorage.setItem(USER_KEY, JSON.stringify(db));
 
-        // --- CLOUD SYNC LOGIC ---
+        // --- NEW IMPROVED CLOUD SYNC ---
         async function toggleLiveSession() {
             const btn = document.getElementById('share-btn');
-            if (!liveID) {
-                btn.innerText = "Connecting...";
-                try {
-                    const res = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(activeData)
-                    });
-                    const url = res.headers.get('Location');
-                    liveID = url.split('/').pop();
-                    activeData.liveID = liveID;
-                    sync();
-                    const shareUrl = `${window.location.origin}${window.location.pathname}?live=${liveID}`;
-                    navigator.clipboard.writeText(shareUrl);
-                    alert("LIVE SESSION ACTIVE!\nLink copied to clipboard. Anyone with this link will see scores update live.");
-                    document.getElementById('live-status').classList.remove('hidden');
-                    btn.innerHTML = `<i class="fa-solid fa-copy mr-2"></i>Copy Live Link`;
-                } catch (e) { alert("Error starting live session. Check internet."); }
-            } else {
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Connecting...`;
+            
+            try {
+                const response = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(activeData)
+                });
+
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+                // JSONBlob returns the ID in the 'Location' header
+                const locationHeader = response.headers.get('Location');
+                if (!locationHeader) throw new Error("Could not retrieve Live ID from server.");
+
+                liveID = locationHeader.split('/').pop();
+                activeData.liveID = liveID;
+                sync();
+
                 const shareUrl = `${window.location.origin}${window.location.pathname}?live=${liveID}`;
-                navigator.clipboard.writeText(shareUrl);
-                alert("Live Link copied to clipboard again!");
+                await navigator.clipboard.writeText(shareUrl);
+                
+                document.getElementById('live-status').classList.remove('hidden');
+                btn.innerHTML = `<i class="fa-solid fa-copy mr-2"></i>Copy Live Link`;
+                alert("SUCCESS! You are now LIVE.\n\nThe link has been copied to your clipboard. Send it to your players!");
+            } catch (err) {
+                console.error(err);
+                btn.innerHTML = `<i class="fa-solid fa-broadcast-tower mr-2"></i>Try Again`;
+                alert(`LIVE FAILED: ${err.message}\n\nTIP: If you are running this as a local file, try opening it in a different browser (like Chrome or Firefox) or upload it to a basic host.`);
             }
         }
 
         async function pushToCloud() {
             if (!liveID || isReadOnly) return;
-            fetch(`${API_URL}/${liveID}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(activeData)
-            });
+            try {
+                await fetch(`${API_BASE}/${liveID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(activeData)
+                });
+            } catch (e) { console.error("Update failed"); }
         }
 
         async function pullFromCloud() {
             if (!liveID) return;
             try {
-                const res = await fetch(`${API_URL}/${liveID}`);
+                const res = await fetch(`${API_BASE}/${liveID}`);
                 const data = await res.json();
                 activeData = data;
                 refreshUI();
                 if(activeData.generated) renderMatches();
-            } catch (e) { console.log("Cloud sync error"); }
+            } catch (e) { console.error("Sync error"); }
         }
 
-        // --- CORE APP LOGIC ---
+        // --- TOURNAMENT LOGIC ---
         function setTeamCount(count) {
             activeData.teamCount = count;
             activeData.teams = Array(count).fill("");
@@ -187,7 +190,7 @@
         function sync() { 
             if(!isReadOnly) { 
                 const db = getDB(); db.active = activeData; saveDB(db); 
-                pushToCloud();
+                if(liveID) pushToCloud();
             } 
         }
 
@@ -228,7 +231,7 @@
             if(activeData.teamCount == 12) {
                 let thirds = gStats.map((s, i) => ({...s[2], group: String.fromCharCode(65+i)})).sort((a,b) => b.p - a.p || b.gd - a.gd);
                 bestThirds = thirds;
-                qualifiers = [gStats[0][0].name, gStats[1][0].name, gStats[2][0].name, gStats[0][1].name, gStats[1][1].name, gStats[2][1].name, thirds[0].name, thirds[1].name];
+                qualifiers = [gStats[0][0].name, gStats[1][0].name, gStats[2][0].name, gStats[0][1].name, gStats[1][1].name, gStats[2][1].name, (thirds[0]||{}).name, (thirds[1]||{}).name];
             } else {
                 qualifiers = gStats.flatMap(s => [s[0].name, s[1].name]);
             }
@@ -252,10 +255,9 @@
             `).join('');
 
             const wcSection = document.getElementById('wildcard-section');
-            const wcList = document.getElementById('wildcard-list');
             if(activeData.teamCount == 12 && res.bestThirds.length > 0) {
                 wcSection.classList.remove('hidden');
-                wcList.innerHTML = res.bestThirds.map((w, i) => `
+                document.getElementById('wildcard-list').innerHTML = res.bestThirds.map((w, i) => `
                     <div class="flex justify-between items-center p-3 rounded-lg border ${i < 2 ? 'wildcard-row' : 'bg-white text-slate-400'}">
                         <span class="text-xs uppercase font-bold">${w.name || '---'} (Grp ${w.group})</span>
                         <span class="text-xs font-bold">${w.p}pts (${w.gd})</span>
@@ -372,7 +374,7 @@
             const db = getDB();
             const list = document.getElementById('history-list');
             if(!db.history.length) { list.innerHTML = `<p class="text-xs text-slate-400 text-center py-10">No archives.</p>`; return; }
-            list.innerHTML = db.history.map(h => `<div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm"><div><p class="text-[9px] font-black text-slate-400 uppercase">${h.date} • ${h.size} Teams</p><p class="font-bold text-indigo-900">🏆 ${h.winner}</p></div></div>`).join('');
+            list.innerHTML = db.history.map(h => `<div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm"><div><p class="text-[9px] font-black text-slate-400 uppercase tracking-tight">${h.date} • ${h.size} Teams</p><p class="font-bold text-indigo-900">🏆 ${h.winner}</p></div></div>`).join('');
         }
 
         window.onload = async () => {
@@ -385,7 +387,7 @@
                 document.getElementById('live-status').classList.remove('hidden');
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
                 await pullFromCloud();
-                setInterval(pullFromCloud, 30000); // 30s auto-refresh
+                setInterval(pullFromCloud, 20000); // 20s auto-refresh
                 showTTab('rankings');
             } else {
                 const db = getDB();
