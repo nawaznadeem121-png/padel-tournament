@@ -50,7 +50,7 @@
         <div id="sync-msg" class="hidden text-center py-20">
             <i class="fa-solid fa-rotate text-orange-400 text-4xl mb-4 animate-spin"></i>
             <p class="font-black text-slate-600 uppercase text-xs tracking-widest">Connecting to Host...</p>
-            <p id="sync-detail" class="text-[10px] text-slate-400 mt-2 uppercase">Waiting for data stream</p>
+            <p id="sync-detail" class="text-[10px] text-slate-400 mt-2 uppercase">Requesting Tournament Data</p>
         </div>
 
         <div id="tab-setup" class="tournament-tab active">
@@ -72,7 +72,7 @@
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Rankings</span>
                 <div class="flex gap-2">
                     <button id="live-btn" onclick="startLive()" class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Go Live</button>
-                    <button id="push-btn" onclick="save()" class="hidden bg-orange-500 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Update All</button>
+                    <button id="push-btn" onclick="manualSync()" class="hidden bg-orange-500 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Update All</button>
                 </div>
             </div>
             <div id="tables-container" class="space-y-6"></div>
@@ -90,6 +90,7 @@
     <script>
         let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null, timers: {}, courts: {}, startTime: null };
         let isGuest = false;
+        let syncInterval = null;
         const EVENT_DURATION = 3 * 60 * 60 * 1000;
 
         function setTeams(n) {
@@ -130,24 +131,41 @@
             });
         }
 
+        async function manualSync() {
+            const btn = document.getElementById('push-btn');
+            btn.innerText = "Syncing...";
+            btn.classList.add('pulse');
+            await save();
+            setTimeout(() => {
+                btn.innerText = "Update All";
+                btn.classList.remove('pulse');
+            }, 1000);
+        }
+
         async function save() {
             if (isGuest) return;
             localStorage.setItem('courtclub_v6', JSON.stringify(data));
             if (data.room) {
-                fetch(`https://ntfy.sh/${data.room}`, { 
-                    method: 'POST', 
-                    body: JSON.stringify(data),
-                    headers: { 'Cache-Control': 'no-cache' }
-                }).catch(() => console.log("Sync error"));
+                try {
+                    await fetch(`https://ntfy.sh/${data.room}`, { 
+                        method: 'POST', 
+                        body: JSON.stringify(data),
+                        headers: { 'Title': 'Tournament Update' }
+                    });
+                } catch(e) { console.error("Sync failed"); }
             }
             refresh();
         }
 
         function listenForJoinRequests() {
+            if (!data.room) return;
             const joinSource = new EventSource(`https://ntfy.sh/${data.room}_join/sse`);
             joinSource.onmessage = (e) => {
-                // If anyone joins, push full data immediately
-                save(); 
+                const p = JSON.parse(e.data);
+                if(p.event === 'message') {
+                    console.log("Guest joined, sending data...");
+                    save(); 
+                }
             };
         }
 
@@ -156,28 +174,28 @@
             const detailUI = document.getElementById('sync-detail');
             syncUI.classList.remove('hidden');
 
-            // 1. Tell the host we are here
-            fetch(`https://ntfy.sh/${room}_join`, { method: 'POST', body: 'guest_joined' });
+            // Handshake: Nudge host until we get data
+            const nudgeHost = () => {
+                fetch(`https://ntfy.sh/${room}_join`, { method: 'POST', body: 'request_data' });
+            };
+            nudgeHost();
+            syncInterval = setInterval(nudgeHost, 5000);
 
-            // 2. Open the listener
             const eventSource = new EventSource(`https://ntfy.sh/${room}/sse`);
             
-            eventSource.onopen = () => { detailUI.innerText = "Connection Open... Waiting for host"; };
-
             eventSource.onmessage = (e) => {
                 try {
                     const p = JSON.parse(e.data);
-                    if (p.message) {
+                    if (p.event === 'message' && p.message) {
                         const incoming = JSON.parse(p.message);
-                        if (incoming.groups && incoming.groups.length > 0) {
+                        if (incoming.groups) {
                             data = incoming;
+                            clearInterval(syncInterval);
                             syncUI.classList.add('hidden');
                             refresh();
                         }
                     }
-                } catch (err) {
-                    console.log("Parse error", err);
-                }
+                } catch (err) { console.log("JSON Parse Error"); }
             };
 
             eventSource.onerror = () => { detailUI.innerText = "Connection lost. Reconnecting..."; };
