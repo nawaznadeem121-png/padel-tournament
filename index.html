@@ -9,9 +9,9 @@
     <style>
         .tournament-tab { display: none; }
         .tournament-tab.active { display: block; }
-        input { font-size: 16px !important; touch-action: manipulation; }
+        input, select { font-size: 16px !important; touch-action: manipulation; }
         .active-tab-btn { border-bottom: 3px solid #fb923c; color: #fb923c; }
-        .read-only input { pointer-events: none; background: #f1f5f9; border: none; }
+        .read-only input, .read-only select { pointer-events: none; background: #f1f5f9; border: none; appearance: none; }
         .qualifying-row { background-color: #f0fdf4; font-weight: 800; color: #166534; }
         .wildcard-row { background-color: #fffbeb; font-weight: 800; color: #92400e; }
         .pulse { animation: pulse 2s infinite; }
@@ -75,10 +75,8 @@
     </div>
 
     <script>
-        let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null, timers: {} };
+        let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null, timers: {}, courts: {} };
         let isGuest = false;
-
-        // --- Core Logic ---
 
         function setTeams(n) {
             data.size = n; data.names = Array(n).fill("");
@@ -95,13 +93,11 @@
 
         function startTourney() {
             const n = data.size / 4;
-            data.groups = []; data.scores = {}; data.ko = {}; data.timers = {};
+            data.groups = []; data.scores = {}; data.ko = {}; data.timers = {}; data.courts = {};
             for(let i=0; i<n; i++) data.groups.push(data.names.slice(i*4, i*4+4));
             showTab('groups');
             save();
         }
-
-        // --- Live / Sync Functionality ---
 
         function startLive() {
             if(!data.room) data.room = 'courtclub_' + Math.random().toString(36).substr(2, 9);
@@ -149,8 +145,6 @@
             };
         }
 
-        // --- Timer Logic ---
-
         function toggleTimer(id, mins) {
             if (isGuest) return;
             if (!data.timers[id]) {
@@ -158,6 +152,11 @@
             } else {
                 data.timers[id].running = !data.timers[id].running;
             }
+            save();
+        }
+
+        function setCourt(id, val) {
+            data.courts[id] = val;
             save();
         }
 
@@ -172,7 +171,6 @@
                     if (el) el.innerText = formatTime(t.remaining);
                 }
             });
-            // Auto-save every 10 seconds if a timer is running to keep guests in sync
             if (changed && !isGuest && new Date().getSeconds() % 10 === 0) save();
         }, 1000);
 
@@ -182,21 +180,29 @@
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
-        function getTimerHTML(id, mins) {
+        function getMatchControlsHTML(id, mins) {
             const t = data.timers[id] || { remaining: mins * 60, running: false };
+            const court = data.courts[id] || "";
             return `
-                <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
-                    <button onclick="toggleTimer('${id}', ${mins})" class="admin-only bg-slate-100 px-2 py-1 rounded text-[9px] font-bold uppercase">
-                        ${t.running ? 'Pause' : 'Start'}
-                    </button>
-                    <span id="timer-${id}" class="text-[11px] font-mono font-black ${t.running ? 'timer-running' : 'text-slate-400'}">
-                        ${formatTime(t.remaining)}
-                    </span>
-                    <span class="text-[8px] text-slate-300 font-bold uppercase">${mins}M</span>
+                <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
+                    <select onchange="setCourt('${id}', this.value)" class="text-[9px] font-black uppercase bg-slate-100 rounded px-1 py-1 outline-none">
+                        <option value="">Select Court</option>
+                        <option value="Court 1" ${court==='Court 1'?'selected':''}>Court 1</option>
+                        <option value="Court 2" ${court==='Court 2'?'selected':''}>Court 2</option>
+                        <option value="Court 3" ${court==='Court 3'?'selected':''}>Court 3</option>
+                        <option value="Court 4" ${court==='Court 4'?'selected':''}>Court 4</option>
+                    </select>
+                    
+                    <div class="flex items-center gap-2">
+                        <span id="timer-${id}" class="text-[11px] font-mono font-black ${t.running ? 'timer-running' : 'text-slate-400'}">
+                            ${formatTime(t.remaining)}
+                        </span>
+                        <button onclick="toggleTimer('${id}', ${mins})" class="admin-only bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[9px] font-bold uppercase">
+                            ${t.running ? 'Pause' : 'Start'}
+                        </button>
+                    </div>
                 </div>`;
         }
-
-        // --- View Logic ---
 
         function updG(g,m,t,v) { 
             const k = `g${g}m${m}`; if(!data.scores[k]) data.scores[k]=["",""]; 
@@ -251,7 +257,7 @@
                                 </div>
                                 <span class="text-xs font-bold w-20 text-right truncate">${g[p[1]]||'TBD'}</span>
                             </div>
-                            ${getTimerHTML(mid, 20)}
+                            ${getMatchControlsHTML(mid, 20)}
                         </div>`
                     }).join('')}
                 </div>`).join('');
@@ -279,7 +285,7 @@
                             </div>
                             <span class="text-[11px] font-bold text-right truncate w-24 ${w==t2?'text-orange-500':''}">${t2||'TBD'}</span>
                         </div>
-                        ${getTimerHTML(id, time)}
+                        ${getMatchControlsHTML(id, time)}
                     </div>
                 </div>`;
             };
@@ -294,7 +300,7 @@
             
             document.getElementById('bracket-container').innerHTML = bh;
             if(isGuest) {
-                document.querySelectorAll('input').forEach(i => i.disabled = true);
+                document.querySelectorAll('input, select').forEach(i => i.disabled = true);
                 document.querySelectorAll('.admin-only').forEach(e => e.remove());
             }
         }
