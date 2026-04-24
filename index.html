@@ -1,4 +1,4 @@
-3<!DOCTYPE html>
+4<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -77,45 +77,56 @@
 
         function setTeams(n) {
             data.size = n; data.names = Array(n).fill("");
-            [12,16,32].forEach(s => document.getElementById('sz-'+s).className = (s==n) ? "py-3 rounded-xl border-2 font-bold text-orange-700 border-orange-400 bg-orange-50" : "py-3 rounded-xl border-2 font-bold text-slate-400 border-slate-200");
+            [12,16,32].forEach(s => {
+                const el = document.getElementById('sz-'+s);
+                if(el) el.className = (s==n) ? "py-3 rounded-xl border-2 font-bold text-orange-700 border-orange-400 bg-orange-50" : "py-3 rounded-xl border-2 font-bold text-slate-400 border-slate-200";
+            });
             renderInputs();
         }
 
         function renderInputs() {
-            document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" value="${n}" onchange="data.names[${i}]=this.value" placeholder="Team ${i+1}" class="w-full p-3 border rounded-xl font-bold">`).join('');
+            document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" value="${n}" onchange="data.names[${i}]=this.value; save();" placeholder="Team ${i+1}" class="w-full p-3 border rounded-xl font-bold">`).join('');
         }
 
         function startLive() {
             if(!data.room) data.room = 'courtclub_' + Math.random().toString(36).substr(2, 9);
-            const link = window.location.origin + window.location.pathname + '?room=' + data.room;
-            navigator.clipboard.writeText(link);
+            // We use a permanent web mirror so the link isn't "blank"
+            const link = `https://ntfy.sh/${data.room}/publish`; 
+            const shareableUrl = window.location.href.split('?')[0] + '?room=' + data.room;
+            
+            navigator.clipboard.writeText(shareableUrl);
             document.getElementById('live-indicator').classList.remove('hidden');
-            document.getElementById('live-btn').innerText = "Copy Link Again";
-            alert("LIVE ACTIVE! Link copied to clipboard.");
+            document.getElementById('live-btn').innerText = "Link Copied!";
+            alert("LIVE ACTIVE!\n\nPlayers can now follow along. Any score you enter will update their screen automatically.");
             save();
         }
 
         async function save() {
-            localStorage.setItem('courtclub_v3', JSON.stringify(data));
+            localStorage.setItem('courtclub_final', JSON.stringify(data));
             if(data.room && !isGuest) {
-                // Using ntfy.sh - very high bypass for local file security
-                fetch(`https://ntfy.sh/${data.room}`, {
-                    method: 'POST',
-                    body: JSON.stringify(data)
-                }).catch(e => console.log("Silent push"));
+                try {
+                    await fetch(`https://ntfy.sh/${data.room}`, {
+                        method: 'POST',
+                        body: JSON.stringify(data),
+                        headers: { 'Title': 'Tournament Update' }
+                    });
+                } catch(e) { console.log("Network lag..."); }
             }
             refresh();
         }
 
-        async function listenForUpdates(room) {
+        function listenForUpdates(room) {
             const eventSource = new EventSource(`https://ntfy.sh/${room}/sse`);
             eventSource.onmessage = (e) => {
-                const updated = JSON.parse(e.data);
-                if(updated.message) {
-                    data = JSON.parse(updated.message);
-                    refresh();
-                    renderMatches();
-                }
+                try {
+                    const payload = JSON.parse(e.data);
+                    if(payload.message) {
+                        data = JSON.parse(payload.message);
+                        localStorage.setItem('courtclub_final', JSON.stringify(data));
+                        refresh();
+                        renderMatches();
+                    }
+                } catch(err) { console.error("Sync error"); }
             };
         }
 
@@ -130,7 +141,9 @@
 
         function renderMatches() {
             const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
-            document.getElementById('match-list').innerHTML = data.groups.map((g, gi) => `
+            const container = document.getElementById('match-list');
+            if(!container) return;
+            container.innerHTML = data.groups.map((g, gi) => `
                 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
                     <div class="bg-indigo-900 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gi)}</div>
                     ${pairs.map((p, mi) => {
@@ -153,6 +166,7 @@
         }
 
         function refresh() {
+            if(!data.groups.length) return;
             let gStats = data.groups.map((g, i) => {
                 let s = g.map(name => ({ name, p: 0, gd: 0 }));
                 const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
@@ -190,29 +204,33 @@
 
         function showTab(id) {
             document.querySelectorAll('.tournament-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-'+id).classList.add('active');
+            const target = document.getElementById('tab-'+id);
+            if(target) target.classList.add('active');
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab-btn'));
-            document.getElementById('btn-'+id).classList.add('active-tab-btn');
+            const btn = document.getElementById('btn-'+id);
+            if(btn) btn.classList.add('active-tab-btn');
             refresh();
         }
 
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const roomID = urlParams.get('room');
+            
+            // Check memory first
+            const saved = localStorage.getItem('courtclub_final');
+            if(saved) data = JSON.parse(saved);
+
             if(roomID) {
                 isGuest = true;
+                data.room = roomID;
                 document.body.classList.add('read-only');
                 document.querySelectorAll('.admin-only').forEach(e => e.remove());
                 document.getElementById('live-indicator').classList.remove('hidden');
                 listenForUpdates(roomID);
                 showTab('rankings');
             } else {
-                const saved = localStorage.getItem('courtclub_v3');
-                if(saved) {
-                    data = JSON.parse(saved);
-                    if(data.groups.length > 0) { renderMatches(); showTab('groups'); }
-                }
                 setTeams(data.size);
+                if(data.groups.length > 0) { renderMatches(); showTab('groups'); }
             }
         };
     </script>
