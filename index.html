@@ -17,9 +17,7 @@
         .font-sans-alt { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
         .bg-brand-navy { background-color: var(--brand-navy); }
-        .text-brand-navy { color: var(--brand-navy); }
         .bg-brand-cream { background-color: var(--brand-cream); }
-        .text-brand-cream { color: var(--brand-cream); }
         .border-brand-cream { border-color: var(--brand-cream); }
 
         .tournament-tab { display: none; }
@@ -36,25 +34,23 @@
         .timer-running { color: #ef4444; font-weight: 900; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        .card { background: white; border-radius: 0.5rem; border: 1px solid rgba(14, 27, 50, 0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .card { background: white; border-radius: 0.5rem; border: 1px solid rgba(14, 27, 50, 0.1); shadow-sm; }
         .btn-primary { background-color: var(--brand-navy); color: var(--brand-cream); font-weight: 900; text-transform: uppercase; border-radius: 0.5rem; border: 1px solid var(--brand-cream); }
-        .btn-secondary { border: 2px solid var(--brand-navy); color: var(--brand-navy); }
-        .btn-active { background-color: var(--brand-navy); color: var(--brand-cream); }
     </style>
 </head>
 <body class="font-sans-alt">
 
     <header class="bg-brand-navy text-white px-4 py-6 shadow-xl border-b-2 border-brand-cream">
         <div class="flex flex-col items-center mb-4">
-            <img src="logo.png" alt="The Court Club" class="h-24 w-auto mb-2">
-            <div id="live-indicator" class="hidden flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mt-2">
-                <span class="w-2 h-2 bg-white rounded-full pulse"></span> Live Tournament
+            <img src="logo.png" alt="The Court Club" class="h-20 w-auto mb-2">
+            <div id="live-indicator" class="hidden flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                <span class="w-2 h-2 bg-white rounded-full pulse"></span> Live
             </div>
         </div>
         
         <div class="flex justify-center items-center bg-white/5 rounded-lg py-3 border border-brand-cream/30 mx-4">
             <div class="text-center">
-                <p class="text-[9px] font-black uppercase tracking-[0.3em] text-brand-cream">Remaining Tournament Time</p>
+                <p class="text-[9px] font-black uppercase tracking-[0.3em] text-brand-cream">Tournament Clock</p>
                 <p id="global-countdown" class="text-3xl font-light text-brand-cream tracking-widest">03:00:00</p>
             </div>
         </div>
@@ -70,17 +66,17 @@
     <div class="p-4 max-w-md mx-auto pb-20">
         <div id="sync-msg" class="hidden text-center py-20">
             <i class="fa-solid fa-rotate text-brand-navy text-4xl mb-4 animate-spin"></i>
-            <p class="font-black text-slate-400 uppercase text-[12px] tracking-widest">Connecting to Live Board...</p>
+            <p class="font-black text-slate-400 uppercase text-[12px] tracking-widest">Loading Live Data...</p>
         </div>
 
         <div id="tab-setup" class="tournament-tab active">
             <div class="grid grid-cols-3 gap-2 mb-6">
-                <button onclick="setTeams(12)" id="sz-12" class="py-3 rounded-lg border-2 font-bold btn-secondary">12 Teams</button>
-                <button onclick="setTeams(16)" id="sz-16" class="py-3 rounded-lg border-2 font-bold btn-secondary">16 Teams</button>
-                <button onclick="setTeams(32)" id="sz-32" class="py-3 rounded-lg border-2 font-bold btn-secondary">32 Teams</button>
+                <button onclick="setTeams(12)" id="sz-12" class="py-3 rounded-lg border-2 font-bold border-brand-navy">12 Teams</button>
+                <button onclick="setTeams(16)" id="sz-16" class="py-3 rounded-lg border-2 font-bold border-brand-navy">16 Teams</button>
+                <button onclick="setTeams(32)" id="sz-32" class="py-3 rounded-lg border-2 font-bold border-brand-navy">32 Teams</button>
             </div>
             <div id="team-list" class="space-y-3"></div>
-            <button onclick="startTourney()" class="w-full mt-8 btn-primary py-4 shadow-xl">Initialize Tournament</button>
+            <button onclick="startTourney()" class="w-full mt-8 btn-primary py-4">Initialize</button>
         </div>
 
         <div id="tab-groups" class="tournament-tab">
@@ -88,9 +84,9 @@
         </div>
 
         <div id="tab-rankings" class="tournament-tab">
-            <div class="flex justify-between items-center mb-6 border-b border-brand-navy/10 pb-2">
-                <span class="text-[10px] font-black text-brand-navy uppercase tracking-widest">Live Group Standings</span>
-                <button id="live-btn" onclick="startLive()" class="admin-only bg-brand-navy text-brand-cream text-[10px] font-bold px-4 py-2 rounded-md uppercase tracking-tighter">Go Live</button>
+            <div class="flex justify-between items-center mb-6 border-b pb-2">
+                <span class="text-[10px] font-black text-brand-navy uppercase tracking-widest">Live Standings</span>
+                <button id="live-btn" onclick="startLive()" class="admin-only bg-brand-navy text-brand-cream text-[10px] font-bold px-4 py-2 rounded-md uppercase">Go Live</button>
             </div>
             <div id="tables-container" class="space-y-6"></div>
             <div id="wildcard-area" class="mt-8 hidden bg-white p-4 rounded-lg border-2 border-brand-cream shadow-sm">
@@ -111,15 +107,11 @@
 
         function setTeams(n) {
             data.size = n; data.names = Array(n).fill("");
-            [12,16,32].forEach(s => {
-                const el = document.getElementById('sz-'+s);
-                if(el) el.className = (s==n) ? "py-3 rounded-lg border-2 font-bold btn-active" : "py-3 rounded-lg border-2 font-bold btn-secondary";
-            });
             renderInputs();
         }
 
         function renderInputs() {
-            document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" id="team-in-${i}" value="${n}" onchange="data.names[${i}]=this.value; save();" placeholder="Team ${i+1} Name" class="w-full p-4 border rounded-lg font-bold shadow-sm outline-none">`).join('');
+            document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" value="${n}" onchange="data.names[${i}]=this.value; save();" placeholder="Team ${i+1}" class="w-full p-4 border rounded-lg font-bold shadow-sm outline-none">`).join('');
         }
 
         function startTourney() {
@@ -134,46 +126,37 @@
             if(!data.room) data.room = 'courtclub_' + Math.random().toString(36).substr(2, 9);
             const shareableUrl = window.location.origin + window.location.pathname + '?room=' + data.room;
             navigator.clipboard.writeText(shareableUrl);
-            document.getElementById('live-indicator').classList.remove('hidden');
             document.getElementById('live-btn').innerText = "Link Copied";
-            listenForJoinRequests();
             save(); 
         }
 
         async function save() {
             if(isGuest) return; 
-            localStorage.setItem('courtclub_v6', JSON.stringify(data));
+            localStorage.setItem('courtclub_master', JSON.stringify(data));
             if(data.room) {
-                fetch(`https://ntfy.sh/${data.room}`, { method: 'POST', body: JSON.stringify(data) }).catch(e => {});
+                // Manager pushes data immediately
+                fetch(`https://ntfy.sh/${data.room}`, { method: 'POST', body: JSON.stringify(data) });
             }
             refresh();
-        }
-
-        function listenForJoinRequests() {
-            const joinSource = new EventSource(`https://ntfy.sh/${data.room}_join/sse`);
-            joinSource.onmessage = () => { save(); };
         }
 
         function listenForUpdates(room) {
             const syncEl = document.getElementById('sync-msg');
             syncEl.classList.remove('hidden');
             
-            // Request an immediate data push from admin
-            fetch(`https://ntfy.sh/${room}_join`, { method: 'POST', body: 'request_data' });
-            
             const eventSource = new EventSource(`https://ntfy.sh/${room}/sse`);
             eventSource.onmessage = (e) => {
-                try {
-                    const payload = JSON.parse(e.data);
-                    if(payload.message) {
+                const payload = JSON.parse(e.data);
+                if(payload.message) {
+                    try {
                         const newData = JSON.parse(payload.message);
-                        if(newData.groups && newData.groups.length > 0) {
+                        if(newData.groups) {
                             data = newData;
                             syncEl.classList.add('hidden');
                             refresh();
                         }
-                    }
-                } catch(err) { console.error("Sync Error", err); }
+                    } catch(err) { console.log("JSON error"); }
+                }
             };
         }
 
@@ -185,12 +168,6 @@
             } else {
                 data.timers[id].running = !data.timers[id].running;
             }
-            save();
-        }
-
-        function setCourt(id, val) {
-            if (isGuest) return;
-            data.courts[id] = val;
             save();
         }
 
@@ -223,47 +200,26 @@
 
         function getMatchControlsHTML(id, mins) {
             const t = data.timers[id] || { remaining: mins * 60, running: false };
-            const court = data.courts[id] || "";
             return `
-                <div class="flex items-center justify-between mt-3 pt-3 border-t border-brand-navy/5">
-                    <select onchange="setCourt('${id}', this.value)" ${isGuest ? 'disabled' : ''} class="text-[10px] font-black uppercase bg-brand-navy/5 border-none rounded-md px-2 py-1 outline-none text-brand-navy">
-                        <option value="">Court</option>
-                        <option value="C1" ${court==='C1'?'selected':''}>C1</option>
-                        <option value="C2" ${court==='C2'?'selected':''}>C2</option>
-                        <option value="C3" ${court==='C3'?'selected':''}>C3</option>
-                        <option value="C4" ${court==='C4'?'selected':''}>C4</option>
-                    </select>
+                <div class="flex items-center justify-between mt-3 pt-3 border-t">
+                    <span class="text-[10px] font-black uppercase text-brand-navy/40">Match Clock</span>
                     <div class="flex items-center gap-3">
                         <span id="timer-${id}" class="text-[12px] font-mono font-black ${t.running ? 'timer-running' : 'text-slate-400'}">
                             ${formatTime(t.remaining)}
                         </span>
-                        ${!isGuest ? `<button onclick="toggleTimer('${id}', ${mins})" class="bg-brand-navy text-brand-cream px-3 py-1 rounded text-[10px] font-bold uppercase">
-                            ${t.running ? 'Pause' : 'Start'}
+                        ${!isGuest ? `<button onclick="toggleTimer('${id}', ${mins})" class="bg-brand-navy text-brand-cream px-3 py-1 rounded text-[10px] font-bold">
+                            ${t.running ? 'Stop' : 'Start'}
                         </button>` : ''}
                     </div>
                 </div>`;
         }
 
-        function updG(g,m,t,v) { 
-            if (isGuest) return;
-            const k = `g${g}m${m}`; if(!data.scores[k]) data.scores[k]=["",""]; 
-            data.scores[k][t] = v===""?"":parseInt(v); save(); 
-        }
-
-        function updK(id, tIdx, v) {
-            if (isGuest) return;
-            if(!data.ko[id]) data.ko[id] = ["", ""];
-            data.ko[id][tIdx] = v==="" ? "" : parseInt(v); save();
-        }
+        function updG(g,m,t,v) { if (isGuest) return; const k = `g${g}m${m}`; if(!data.scores[k]) data.scores[k]=["",""]; data.scores[k][t] = v===""?"":parseInt(v); save(); }
+        function updK(id, tIdx, v) { if (isGuest) return; if(!data.ko[id]) data.ko[id] = ["", ""]; data.ko[id][tIdx] = v==="" ? "" : parseInt(v); save(); }
 
         function refresh() {
             if(!data.groups || !data.groups.length) return;
             
-            // Hide Admin Items if Guest
-            if(isGuest) {
-                document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'none');
-            }
-
             // Standings logic
             let gStats = data.groups.map((g, i) => {
                 let s = g.map(name => ({ name, p: 0, gd: 0 }));
@@ -280,11 +236,11 @@
 
             document.getElementById('tables-container').innerHTML = gStats.map((s, i) => `
                 <div class="card p-4">
-                    <h3 class="font-black text-[10px] text-brand-navy mb-3 uppercase tracking-widest border-b pb-1">Group ${String.fromCharCode(65+i)}</h3>
+                    <h3 class="font-black text-[10px] uppercase mb-3 border-b pb-1">Group ${String.fromCharCode(65+i)}</h3>
                     <table class="w-full text-[11px] font-bold">
                         ${s.map((t, idx) => `<tr class="${idx<2?'qualifying-row':''}">
-                            <td class="py-2.5 px-2 rounded-l-md">${t.name || '---'}</td>
-                            <td class="text-right py-2.5 px-2 rounded-r-md text-brand-navy/60">${t.p}pts (${t.gd})</td>
+                            <td class="py-2 px-2">${t.name || '---'}</td>
+                            <td class="text-right py-2 px-2">${t.p}pts (${t.gd})</td>
                         </tr>`).join('')}
                     </table>
                 </div>`).join('');
@@ -299,54 +255,53 @@
                         const s = data.scores[mid] || ["",""];
                         return `<div class="p-4 border-b last:border-0">
                             <div class="flex items-center justify-between">
-                                <span class="text-[11px] font-bold w-20 truncate">${g[p[0]]||'TBD'}</span>
+                                <span class="text-[11px] font-bold truncate w-24">${g[p[0]]||'TBD'}</span>
                                 <div class="flex gap-2">
-                                    <input type="number" value="${s[0]}" oninput="updG(${gi},${mi},0,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded-lg font-black">
-                                    <input type="number" value="${s[1]}" oninput="updG(${gi},${mi},1,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded-lg font-black">
+                                    <input type="number" value="${s[0]}" oninput="updG(${gi},${mi},0,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded font-black">
+                                    <input type="number" value="${s[1]}" oninput="updG(${gi},${mi},1,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded font-black">
                                 </div>
-                                <span class="text-[11px] font-bold w-20 text-right truncate">${g[p[1]]||'TBD'}</span>
+                                <span class="text-[11px] font-bold text-right truncate w-24">${g[p[1]]||'TBD'}</span>
                             </div>
                             ${getMatchControlsHTML(mid, 20)}
                         </div>`
                     }).join('')}
                 </div>`).join('');
 
-            // Bracket logic
+            // Finals Bracket
             let qual = [];
             if(data.size == 12) {
                 let thirds = gStats.map((s, i) => ({...s[2], grp: String.fromCharCode(65+i)})).sort((a,b) => b.p - a.p || b.gd - a.gd);
                 qual = [gStats[0][0].name, gStats[1][0].name, gStats[2][0].name, gStats[0][1].name, gStats[1][1].name, gStats[2][1].name, (thirds[0]||{}).name, (thirds[1]||{}).name];
                 document.getElementById('wildcard-area').classList.remove('hidden');
-                document.getElementById('wildcard-list').innerHTML = thirds.map((t, i) => `<div class="flex justify-between text-[11px] p-2 ${i<2?'wildcard-row rounded bg-brand-cream/10':''} font-bold"><span>Group ${t.grp}: ${t.name || '---'}</span><span>${t.p}pts (${t.gd})</span></div>`).join('');
+                document.getElementById('wildcard-list').innerHTML = thirds.map((t, i) => `<div class="flex justify-between text-[11px] p-2 ${i<2?'wildcard-row rounded':''} font-bold"><span>Group ${t.grp}: ${t.name || '---'}</span><span>${t.p}pts (${t.gd})</span></div>`).join('');
             } else {
                 qual = gStats.flatMap(s => [s[0].name, s[1].name]);
             }
 
             const wins = {};
-            const matchHTML = (id, t1, t2, label, time) => {
+            const matchHTML = (id, t1, t2, label) => {
                 const s = data.ko[id] || ["", ""];
                 const w = (s[0]!=="" && s[1]!=="" && s[0]!==s[1]) ? (s[0]>s[1]?t1:t2) : null;
                 wins[id] = w;
                 return `<div class="mb-4"><p class="text-[9px] font-black opacity-40 uppercase mb-1 ml-1">${label}</p>
                     <div class="card p-4"><div class="flex justify-between items-center">
-                        <span class="text-[11px] font-black truncate w-24 ${w==t1?'text-brand-cream bg-brand-navy px-1 rounded':''}">${t1||'TBD'}</span>
+                        <span class="text-[11px] font-black truncate w-24 ${w==t1?'bg-brand-navy text-white px-1 rounded':''}">${t1||'TBD'}</span>
                         <div class="flex gap-2">
-                            <input type="number" value="${s[0]}" oninput="updK('${id}',0,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded-lg font-black">
-                            <input type="number" value="${s[1]}" oninput="updK('${id}',1,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded-lg font-black">
+                            <input type="number" value="${s[0]}" oninput="updK('${id}',0,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded font-black">
+                            <input type="number" value="${s[1]}" oninput="updK('${id}',1,this.value)" ${isGuest?'disabled':''} class="w-10 h-10 text-center bg-slate-100 rounded font-black">
                         </div>
-                        <span class="text-[11px] font-black text-right truncate w-24 ${w==t2?'text-brand-cream bg-brand-navy px-1 rounded':''}">${t2||'TBD'}</span>
-                    </div>${getMatchControlsHTML(id, time)}</div></div>`;
+                        <span class="text-[11px] font-black text-right truncate w-24 ${w==t2?'bg-brand-navy text-white px-1 rounded':''}">${t2||'TBD'}</span>
+                    </div></div></div>`;
             };
 
-            let bh = `<p class="text-center text-[10px] font-black uppercase tracking-widest mb-4">Quarter Finals</p>` + 
-                     matchHTML("QF1", qual[0], qual[7], "Match 1", 20) + matchHTML("QF2", qual[1], qual[6], "Match 2", 20) +
-                     matchHTML("QF3", qual[2], qual[5], "Match 3", 20) + matchHTML("QF4", qual[3], qual[4], "Match 4", 20) +
-                     `<p class="text-center text-[10px] font-black uppercase tracking-widest my-6">Semi Finals</p>` +
-                     matchHTML("SF1", wins.QF1, wins.QF4, "Semi 1", 30) + matchHTML("SF2", wins.QF2, wins.QF3, "Semi 2", 30) +
-                     `<p class="text-center text-[10px] font-black uppercase tracking-widest my-6">Final</p>` +
-                     matchHTML("F", wins.SF1, wins.SF2, "Championship", 30);
-            
-            document.getElementById('bracket-container').innerHTML = bh;
+            document.getElementById('bracket-container').innerHTML = `
+                <p class="text-center text-[10px] font-black uppercase mb-4">Quarter Finals</p>
+                ${matchHTML("QF1", qual[0], qual[7], "Match 1")}${matchHTML("QF2", qual[1], qual[6], "Match 2")}
+                ${matchHTML("QF3", qual[2], qual[5], "Match 3")}${matchHTML("QF4", qual[3], qual[4], "Match 4")}
+                <p class="text-center text-[10px] font-black uppercase my-6">Semi Finals</p>
+                ${matchHTML("SF1", wins.QF1, wins.QF4, "Semi 1")}${matchHTML("SF2", wins.QF2, wins.QF3, "Semi 2")}
+                <p class="text-center text-[10px] font-black uppercase my-6">Final</p>
+                ${matchHTML("F", wins.SF1, wins.SF2, "Championship")}`;
         }
 
         function showTab(id) {
@@ -367,22 +322,13 @@
                 data.room = roomID;
                 document.body.classList.add('read-only');
                 document.getElementById('live-indicator').classList.remove('hidden');
-                
-                // Hide Setup tab and Admin buttons immediately
-                document.getElementById('btn-setup').style.display = 'none';
-                document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'none');
-                
+                document.querySelectorAll('.admin-only').forEach(e => e.remove());
                 listenForUpdates(roomID);
                 showTab('rankings');
             } else {
-                const saved = localStorage.getItem('courtclub_v6');
-                if(saved) {
-                    data = JSON.parse(saved);
-                    if(data.room) {
-                        document.getElementById('live-indicator').classList.remove('hidden');
-                        listenForJoinRequests();
-                    }
-                }
+                const saved = localStorage.getItem('courtclub_master');
+                if(saved) data = JSON.parse(saved);
+                if(data.room) document.getElementById('live-indicator').classList.remove('hidden');
                 setTeams(data.size);
                 if(data.groups.length) showTab('groups');
             }
