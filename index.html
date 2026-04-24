@@ -15,6 +15,7 @@
         .qualifying-row { background-color: #f0fdf4; font-weight: 800; color: #166534; }
         .wildcard-row { background-color: #fffbeb; font-weight: 800; color: #92400e; }
         .pulse { animation: pulse 2s infinite; }
+        .timer-running { color: #ef4444; font-weight: 900; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
@@ -24,8 +25,11 @@
         <div class="flex items-center gap-2">
             <span class="font-black text-xl tracking-tighter uppercase text-orange-200">The Court Club</span>
         </div>
-        <div id="live-indicator" class="hidden flex items-center gap-2 bg-red-600 px-2 py-1 rounded text-[10px] font-black uppercase">
-            <span class="w-2 h-2 bg-white rounded-full pulse"></span> Live
+        <div class="flex items-center gap-3">
+            <div id="live-indicator" class="hidden flex items-center gap-2 bg-red-600 px-2 py-1 rounded text-[10px] font-black uppercase">
+                <span class="w-2 h-2 bg-white rounded-full pulse"></span> Live
+            </div>
+            <button onclick="resetTourney()" class="admin-only text-[10px] font-bold bg-slate-700 px-2 py-1 rounded uppercase">Reset</button>
         </div>
     </header>
 
@@ -37,11 +41,6 @@
     </nav>
 
     <div class="p-4 max-w-md mx-auto pb-20">
-        <div id="sync-msg" class="hidden text-center py-10">
-            <i class="fa-solid fa-rotate text-orange-400 text-3xl mb-4 animate-spin"></i>
-            <p class="font-black text-slate-400 uppercase text-[10px] tracking-widest">Syncing Live Data...</p>
-        </div>
-
         <div id="tab-setup" class="tournament-tab active">
             <div class="grid grid-cols-3 gap-2 mb-6">
                 <button onclick="setTeams(12)" id="sz-12" class="py-3 rounded-xl border-2 font-bold text-orange-700 border-orange-400 bg-orange-50">12 Teams</button>
@@ -59,11 +58,11 @@
         <div id="tab-rankings" class="tournament-tab">
             <div class="flex justify-between items-center mb-4 admin-only">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Rankings</span>
-                <button id="live-btn" onclick="startLive()" class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Go Live & Share</button>
+                <button id="live-btn" onclick="startLive()" class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Go Live</button>
             </div>
             <div id="tables-container" class="space-y-6"></div>
             <div id="wildcard-area" class="mt-8 hidden bg-amber-50 p-4 rounded-xl border border-amber-200 shadow-sm">
-                <h3 class="font-black text-[10px] text-amber-600 mb-3 uppercase text-center">Best 3rd Place Runners-Up</h3>
+                <h3 class="font-black text-[10px] text-amber-600 mb-3 uppercase text-center">Best 3rd Place</h3>
                 <div id="wildcard-list" class="space-y-2"></div>
             </div>
         </div>
@@ -74,8 +73,9 @@
     </div>
 
     <script>
-        let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null };
+        let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null, timers: {} };
         let isGuest = false;
+        let timerInterval;
 
         function setTeams(n) {
             data.size = n; data.names = Array(n).fill("");
@@ -90,68 +90,65 @@
             document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" value="${n}" onchange="data.names[${i}]=this.value; save();" placeholder="Team ${i+1}" class="w-full p-3 border rounded-xl font-bold">`).join('');
         }
 
-        function startLive() {
-            if(!data.room) data.room = 'courtclub_' + Math.random().toString(36).substr(2, 9);
-            const shareableUrl = window.location.href.split('?')[0] + '?room=' + data.room;
-            navigator.clipboard.writeText(shareableUrl);
-            document.getElementById('live-indicator').classList.remove('hidden');
-            document.getElementById('live-btn').innerText = "Link Copied!";
-            listenForJoinRequests();
-            alert("LIVE ACTIVE! Share link copied.");
-            save(); 
+        function toggleTimer(id, durationMins) {
+            if (isGuest) return;
+            if (!data.timers[id]) {
+                data.timers[id] = { remaining: durationMins * 60, running: true };
+            } else {
+                data.timers[id].running = !data.timers[id].running;
+            }
+            save();
+        }
+
+        function runTimers() {
+            let changed = false;
+            Object.keys(data.timers).forEach(id => {
+                const t = data.timers[id];
+                if (t.running && t.remaining > 0) {
+                    t.remaining--;
+                    changed = true;
+                    const el = document.getElementById(`timer-display-${id}`);
+                    if (el) el.innerText = formatTime(t.remaining);
+                    if (t.remaining === 0) {
+                        t.running = false;
+                        alert(`Match ${id} finished!`);
+                    }
+                }
+            });
+            if (changed && !isGuest && Math.random() > 0.9) save(); // Throttle sync for timers
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function getTimerHTML(id, mins) {
+            const t = data.timers[id] || { remaining: mins * 60, running: false };
+            return `
+                <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
+                    <button onclick="toggleTimer('${id}', ${mins})" class="admin-only p-1 px-3 bg-slate-100 rounded text-[9px] font-black uppercase">
+                        ${t.running ? 'Stop' : 'Start'}
+                    </button>
+                    <span id="timer-display-${id}" class="text-[11px] font-mono font-bold ${t.running ? 'timer-running' : 'text-slate-400'}">
+                        ${formatTime(t.remaining)}
+                    </span>
+                    <span class="text-[8px] text-slate-300 uppercase font-bold">${mins}M Limit</span>
+                </div>`;
         }
 
         async function save() {
-            // Capture focus BEFORE clearing HTML
-            const focusedId = document.activeElement ? document.activeElement.id : null;
-            
             localStorage.setItem('courtclub_v6', JSON.stringify(data));
             if(data.room && !isGuest) {
                 fetch(`https://ntfy.sh/${data.room}`, { method: 'POST', body: JSON.stringify(data) }).catch(e => {});
             }
-            
             refresh();
-
-            // Restore focus AFTER HTML is re-rendered
-            if (focusedId) {
-                const el = document.getElementById(focusedId);
-                if (el) {
-                    el.focus();
-                    // Move cursor to end of text
-                    if (el.type === 'text' || el.type === 'number') {
-                        const val = el.value;
-                        el.value = '';
-                        el.value = val;
-                    }
-                }
-            }
-        }
-
-        function listenForJoinRequests() {
-            const joinSource = new EventSource(`https://ntfy.sh/${data.room}_join/sse`);
-            joinSource.onmessage = () => { save(); };
-        }
-
-        function listenForUpdates(room) {
-            document.getElementById('sync-msg').classList.remove('hidden');
-            fetch(`https://ntfy.sh/${room}_join`, { method: 'POST', body: 'join' });
-            const eventSource = new EventSource(`https://ntfy.sh/${room}/sse`);
-            eventSource.onmessage = (e) => {
-                try {
-                    const payload = JSON.parse(e.data);
-                    if(payload.message) {
-                        data = JSON.parse(payload.message);
-                        localStorage.setItem('courtclub_v6', JSON.stringify(data));
-                        document.getElementById('sync-msg').classList.add('hidden');
-                        refresh();
-                    }
-                } catch(err) { }
-            };
         }
 
         function startTourney() {
             const n = data.size / 4;
-            data.groups = [];
+            data.groups = []; data.scores = {}; data.ko = {}; data.timers = {};
             for(let i=0; i<n; i++) data.groups.push(data.names.slice(i*4, i*4+4));
             showTab('groups');
             save();
@@ -168,16 +165,10 @@
             save();
         }
 
-        function getWinner(id, t1, t2) {
-            const s = data.ko[id];
-            if(!s || s[0] === "" || s[1] === "" || !t1 || !t2) return null;
-            if (s[0] === s[1]) return null; // Tie
-            return s[0] > s[1] ? t1 : t2;
-        }
-
         function refresh() {
             if(!data.groups || !data.groups.length) return;
             
+            // Group Tables Logic
             let gStats = data.groups.map((g, i) => {
                 let s = g.map(name => ({ name, p: 0, gd: 0 }));
                 const pairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
@@ -202,104 +193,94 @@
                     </table>
                 </div>`).join('');
 
-            let qual = [];
-            if(data.size == 12) {
-                let thirds = gStats.map((s, i) => ({...s[2], grp: String.fromCharCode(65+i)})).sort((a,b) => b.p - a.p || b.gd - a.gd);
-                document.getElementById('wildcard-area').classList.remove('hidden');
-                document.getElementById('wildcard-list').innerHTML = thirds.map((w, i) => `
-                    <div class="flex justify-between p-3 rounded-lg border ${i<2?'wildcard-row':'bg-white text-slate-300'}">
-                        <span class="text-xs font-bold uppercase">${w.name || '---'} (Grp ${w.grp})</span>
-                        <span class="text-xs font-bold">${w.p}pts (${w.gd})</span>
-                    </div>`).join('');
-                qual = [gStats[0][0].name, gStats[1][0].name, gStats[2][0].name, gStats[0][1].name, gStats[1][1].name, gStats[2][1].name, (thirds[0]||{}).name, (thirds[1]||{}).name];
-            } else {
-                qual = gStats.flatMap(s => [s[0].name, s[1].name]);
-            }
-
+            // Group Matches
             const gPairs = [[0,1], [2,3], [0,2], [1,3], [0,3], [1,2]];
             document.getElementById('match-list').innerHTML = data.groups.map((g, gi) => `
                 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
                     <div class="bg-indigo-900 text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65+gi)}</div>
                     ${gPairs.map((p, mi) => {
-                        const s = data.scores[`g${gi}m${mi}`] || ["",""];
-                        return `<div class="flex items-center justify-between p-3 border-b last:border-0">
-                            <span class="text-xs font-bold w-20 truncate">${g[p[0]]||'TBD'}</span>
-                            <div class="flex gap-1">
-                                <input type="number" id="g${gi}m${mi}t0" value="${s[0]}" oninput="updG(${gi},${mi},0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
-                                <input type="number" id="g${gi}m${mi}t1" value="${s[1]}" oninput="updG(${gi},${mi},1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                        const mid = `g${gi}m${mi}`;
+                        const s = data.scores[mid] || ["",""];
+                        return `<div class="p-3 border-b last:border-0">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold w-20 truncate">${g[p[0]]||'TBD'}</span>
+                                <div class="flex gap-1">
+                                    <input type="number" value="${s[0]}" oninput="updG(${gi},${mi},0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                                    <input type="number" value="${s[1]}" oninput="updG(${gi},${mi},1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                                </div>
+                                <span class="text-xs font-bold w-20 text-right truncate">${g[p[1]]||'TBD'}</span>
                             </div>
-                            <span class="text-xs font-bold w-20 text-right truncate">${g[p[1]]||'TBD'}</span>
+                            ${getTimerHTML(mid, 20)}
                         </div>`
                     }).join('')}
                 </div>`).join('');
 
+            // Bracket Logic
+            let qual = data.size == 12 ? [] : gStats.flatMap(s => [s[0].name, s[1].name]); 
+            if(data.size == 12) {
+                let thirds = gStats.map((s, i) => ({...s[2], grp: String.fromCharCode(65+i)})).sort((a,b) => b.p - a.p || b.gd - a.gd);
+                qual = [gStats[0][0].name, gStats[1][0].name, gStats[2][0].name, gStats[0][1].name, gStats[1][1].name, gStats[2][1].name, (thirds[0]||{}).name, (thirds[1]||{}).name];
+            }
+
             const wins = {};
-            const matchHTML = (id, t1, t2, label) => {
+            const matchHTML = (id, t1, t2, label, time) => {
                 const s = data.ko[id] || ["", ""];
-                const w = getWinner(id, t1, t2);
+                const w = (s[0]!=="" && s[1]!=="" && s[0]!==s[1]) ? (s[0]>s[1]?t1:t2) : null;
                 wins[id] = w;
                 return `
                 <div class="mb-4">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">${label}</p>
-                    <div class="bg-white p-3 rounded-xl border flex justify-between items-center shadow-sm">
-                        <span class="text-[11px] font-bold truncate w-24 ${w && w==t1?'text-orange-500':''}">${t1||'TBD'}</span>
-                        <div class="flex gap-1">
-                            <input type="number" id="${id}t0" value="${s[0]}" oninput="updK('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
-                            <input type="number" id="${id}t1" value="${s[1]}" oninput="updK('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                    <div class="bg-white p-3 rounded-xl border shadow-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[11px] font-bold truncate w-24 ${w==t1?'text-orange-500':''}">${t1||'TBD'}</span>
+                            <div class="flex gap-1">
+                                <input type="number" value="${s[0]}" oninput="updK('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                                <input type="number" value="${s[1]}" oninput="updK('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                            </div>
+                            <span class="text-[11px] font-bold text-right truncate w-24 ${w==t2?'text-orange-500':''}">${t2||'TBD'}</span>
                         </div>
-                        <span class="text-[11px] font-bold text-right truncate w-24 ${w && w==t2?'text-orange-500':''}">${t2||'TBD'}</span>
+                        ${getTimerHTML(id, time)}
                     </div>
                 </div>`;
             };
 
-            let bh = `<p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Quarter Finals</p>`;
-            bh += matchHTML("QF1", qual[0], qual[7], "QF 1") + matchHTML("QF2", qual[1], qual[6], "QF 2") +
-                  matchHTML("QF3", qual[2], qual[5], "QF 3") + matchHTML("QF4", qual[3], qual[4], "QF 4");
-            bh += `<div class="h-px bg-slate-200 my-6"></div><p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Semi Finals</p>`;
-            bh += matchHTML("SF1", wins.QF1, wins.QF4, "Semi 1") + matchHTML("SF2", wins.QF2, wins.QF3, "Semi 2");
-            bh += `<div class="py-4 border-t-2 border-orange-200 mt-6"><p class="text-center text-[10px] font-black text-orange-500 uppercase tracking-widest mb-4">Championship</p></div>`;
-            bh += matchHTML("F", wins.SF1, wins.SF2, "Finals");
+            let bh = `<p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Quarter Finals (20m)</p>`;
+            bh += matchHTML("QF1", qual[0], qual[7], "QF 1", 20) + matchHTML("QF2", qual[1], qual[6], "QF 2", 20) +
+                  matchHTML("QF3", qual[2], qual[5], "QF 3", 20) + matchHTML("QF4", qual[3], qual[4], "QF 4", 20);
             
-            if(wins.F) bh += `<div class="mt-6 p-4 bg-orange-500 text-white rounded-xl text-center shadow-xl animate-bounce"><p class="text-[10px] font-black uppercase">Tournament Winner</p><p class="text-xl font-black">${wins.F}</p></div>`;
+            bh += `<div class="h-px bg-slate-200 my-6"></div><p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Semi Finals (30m)</p>`;
+            bh += matchHTML("SF1", wins.QF1, wins.QF4, "Semi 1", 30) + matchHTML("SF2", wins.QF2, wins.QF3, "Semi 2", 30);
+            
+            bh += `<div class="py-4 border-t-2 border-orange-200 mt-6"><p class="text-center text-[10px] font-black text-orange-500 uppercase tracking-widest mb-4">Championship (30m)</p></div>`;
+            bh += matchHTML("F", wins.SF1, wins.SF2, "Finals", 30);
             
             document.getElementById('bracket-container').innerHTML = bh;
-            if(isGuest) document.querySelectorAll('input').forEach(i => i.disabled = true);
+            if(isGuest) document.querySelectorAll('input, button.admin-only').forEach(i => i.remove());
         }
 
         function showTab(id) {
             document.querySelectorAll('.tournament-tab').forEach(t => t.classList.remove('active'));
-            const target = document.getElementById('tab-'+id);
-            if(target) target.classList.add('active');
+            document.getElementById('tab-'+id).classList.add('active');
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab-btn'));
-            const btn = document.getElementById('btn-'+id);
-            if(btn) btn.classList.add('active-tab-btn');
+            document.getElementById('btn-'+id).classList.add('active-tab-btn');
             refresh();
         }
 
         window.onload = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomID = urlParams.get('room');
             const saved = localStorage.getItem('courtclub_v6');
             if(saved) data = JSON.parse(saved);
-
+            
+            const roomID = new URLSearchParams(window.location.search).get('room');
             if(roomID) {
                 isGuest = true;
                 data.room = roomID;
                 document.body.classList.add('read-only');
                 document.querySelectorAll('.admin-only').forEach(e => e.remove());
-                document.getElementById('live-indicator').classList.remove('hidden');
-                listenForUpdates(roomID);
-                showTab('rankings');
-            } else {
-                setTeams(data.size);
-                if(data.groups.length > 0) { 
-                    showTab('groups'); 
-                    if(data.room) {
-                        document.getElementById('live-indicator').classList.remove('hidden');
-                        listenForJoinRequests();
-                    }
-                }
             }
+            
+            setTeams(data.size);
+            if(data.groups.length) showTab('groups');
+            timerInterval = setInterval(runTimers, 1000);
         };
     </script>
 </body>
