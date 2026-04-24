@@ -1,4 +1,4 @@
-1<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -47,10 +47,10 @@
     </nav>
 
     <div class="p-4 max-w-md mx-auto pb-20">
-        <div id="sync-msg" class="hidden text-center py-10">
-            <i class="fa-solid fa-rotate text-orange-400 text-3xl mb-4 animate-spin"></i>
-            <p class="font-black text-slate-400 uppercase text-[10px] tracking-widest">Syncing Live Data...</p>
-            <p class="text-[9px] text-slate-300 mt-2">Waiting for host to update...</p>
+        <div id="sync-msg" class="hidden text-center py-20">
+            <i class="fa-solid fa-rotate text-orange-400 text-4xl mb-4 animate-spin"></i>
+            <p class="font-black text-slate-600 uppercase text-xs tracking-widest">Connecting to Host...</p>
+            <p id="sync-detail" class="text-[10px] text-slate-400 mt-2 uppercase">Waiting for data stream</p>
         </div>
 
         <div id="tab-setup" class="tournament-tab active">
@@ -70,7 +70,10 @@
         <div id="tab-rankings" class="tournament-tab">
             <div class="flex justify-between items-center mb-4 admin-only">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Rankings</span>
-                <button id="live-btn" onclick="startLive()" class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Go Live & Share</button>
+                <div class="flex gap-2">
+                    <button id="live-btn" onclick="startLive()" class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Go Live</button>
+                    <button id="push-btn" onclick="save()" class="hidden bg-orange-500 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Update All</button>
+                </div>
             </div>
             <div id="tables-container" class="space-y-6"></div>
             <div id="wildcard-area" class="mt-8 hidden bg-amber-50 p-4 rounded-xl border border-amber-200 shadow-sm">
@@ -115,14 +118,15 @@
         }
 
         function startLive() {
-            if (!data.room) data.room = 'courtclub_' + Math.random().toString(36).substr(2, 9);
+            if (!data.room) data.room = 'court_' + Math.random().toString(36).substr(2, 8);
             const shareableUrl = window.location.href.split('?')[0] + '?room=' + data.room;
             navigator.clipboard.writeText(shareableUrl).then(() => {
                 document.getElementById('live-indicator').classList.remove('hidden');
                 document.getElementById('live-btn').innerText = "Link Copied!";
+                document.getElementById('push-btn').classList.remove('hidden');
                 listenForJoinRequests();
                 save(); 
-                alert("LIVE ACTIVE! Share link copied.");
+                alert("LIVE ACTIVE! Link copied to clipboard.");
             });
         }
 
@@ -132,8 +136,9 @@
             if (data.room) {
                 fetch(`https://ntfy.sh/${data.room}`, { 
                     method: 'POST', 
-                    body: JSON.stringify(data)
-                }).catch(() => {});
+                    body: JSON.stringify(data),
+                    headers: { 'Cache-Control': 'no-cache' }
+                }).catch(() => console.log("Sync error"));
             }
             refresh();
         }
@@ -141,30 +146,41 @@
         function listenForJoinRequests() {
             const joinSource = new EventSource(`https://ntfy.sh/${data.room}_join/sse`);
             joinSource.onmessage = (e) => {
-                const p = JSON.parse(e.data);
-                if(p.message === 'join') save(); 
+                // If anyone joins, push full data immediately
+                save(); 
             };
         }
 
         function listenForUpdates(room) {
-            document.getElementById('sync-msg').classList.remove('hidden');
-            // Notify host we are here
-            fetch(`https://ntfy.sh/${room}_join`, { method: 'POST', body: 'join' });
+            const syncUI = document.getElementById('sync-msg');
+            const detailUI = document.getElementById('sync-detail');
+            syncUI.classList.remove('hidden');
 
+            // 1. Tell the host we are here
+            fetch(`https://ntfy.sh/${room}_join`, { method: 'POST', body: 'guest_joined' });
+
+            // 2. Open the listener
             const eventSource = new EventSource(`https://ntfy.sh/${room}/sse`);
+            
+            eventSource.onopen = () => { detailUI.innerText = "Connection Open... Waiting for host"; };
+
             eventSource.onmessage = (e) => {
                 try {
                     const p = JSON.parse(e.data);
                     if (p.message) {
                         const incoming = JSON.parse(p.message);
-                        if(incoming.groups && incoming.groups.length > 0) {
+                        if (incoming.groups && incoming.groups.length > 0) {
                             data = incoming;
-                            document.getElementById('sync-msg').classList.add('hidden');
+                            syncUI.classList.add('hidden');
                             refresh();
                         }
                     }
-                } catch (err) {}
+                } catch (err) {
+                    console.log("Parse error", err);
+                }
             };
+
+            eventSource.onerror = () => { detailUI.innerText = "Connection lost. Reconnecting..."; };
         }
 
         function toggleTimer(id, mins) {
@@ -347,9 +363,7 @@
             const roomID = urlParams.get('room');
             const saved = localStorage.getItem('courtclub_v6');
             
-            try {
-                if (saved) data = JSON.parse(saved);
-            } catch(e) {}
+            try { if (saved) data = JSON.parse(saved); } catch(e) {}
 
             if (roomID) {
                 isGuest = true;
@@ -366,6 +380,7 @@
                     showTab('groups');
                     if (data.room) {
                         document.getElementById('live-indicator').classList.remove('hidden');
+                        document.getElementById('push-btn').classList.remove('hidden');
                         listenForJoinRequests();
                     }
                 } else {
