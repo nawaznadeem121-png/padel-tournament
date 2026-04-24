@@ -1,4 +1,4 @@
-2<!DOCTYPE html>
+3<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -72,7 +72,7 @@
     </div>
 
     <script>
-        let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, liveID: null };
+        let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null };
         let isGuest = false;
 
         function setTeams(n) {
@@ -82,47 +82,41 @@
         }
 
         function renderInputs() {
-            document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" onchange="data.names[${i}]=this.value" placeholder="Team ${i+1}" class="w-full p-3 border rounded-xl font-bold">`).join('');
+            document.getElementById('team-list').innerHTML = data.names.map((n, i) => `<input type="text" value="${n}" onchange="data.names[${i}]=this.value" placeholder="Team ${i+1}" class="w-full p-3 border rounded-xl font-bold">`).join('');
         }
 
-        async function startLive() {
-            const btn = document.getElementById('live-btn');
-            btn.innerText = "Connecting...";
-            try {
-                const res = await fetch('https://api.jsonbin.io/v3/b', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Bin-Private': 'false' },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                data.liveID = result.metadata.id;
-                const link = window.location.origin + window.location.pathname + '?live=' + data.liveID;
-                navigator.clipboard.writeText(link);
-                alert("LIVE ACTIVE! Link copied to clipboard. Send this to players.");
-                document.getElementById('live-indicator').classList.remove('hidden');
-                btn.innerText = "Copy Link Again";
-                save();
-            } catch(e) { alert("Connection Error. Try again."); btn.innerText = "Go Live"; }
+        function startLive() {
+            if(!data.room) data.room = 'courtclub_' + Math.random().toString(36).substr(2, 9);
+            const link = window.location.origin + window.location.pathname + '?room=' + data.room;
+            navigator.clipboard.writeText(link);
+            document.getElementById('live-indicator').classList.remove('hidden');
+            document.getElementById('live-btn').innerText = "Copy Link Again";
+            alert("LIVE ACTIVE! Link copied to clipboard.");
+            save();
         }
 
         async function save() {
-            localStorage.setItem('courtclub', JSON.stringify(data));
-            if(data.liveID && !isGuest) {
-                fetch(`https://api.jsonbin.io/v3/b/${data.liveID}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+            localStorage.setItem('courtclub_v3', JSON.stringify(data));
+            if(data.room && !isGuest) {
+                // Using ntfy.sh - very high bypass for local file security
+                fetch(`https://ntfy.sh/${data.room}`, {
+                    method: 'POST',
                     body: JSON.stringify(data)
-                });
+                }).catch(e => console.log("Silent push"));
             }
             refresh();
         }
 
-        async function loadLive(id) {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${id}/latest`);
-            const result = await res.json();
-            data = result.record;
-            refresh();
-            renderMatches();
+        async function listenForUpdates(room) {
+            const eventSource = new EventSource(`https://ntfy.sh/${room}/sse`);
+            eventSource.onmessage = (e) => {
+                const updated = JSON.parse(e.data);
+                if(updated.message) {
+                    data = JSON.parse(updated.message);
+                    refresh();
+                    renderMatches();
+                }
+            };
         }
 
         function startTourney() {
@@ -204,17 +198,16 @@
 
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const liveID = urlParams.get('live');
-            if(liveID) {
+            const roomID = urlParams.get('room');
+            if(roomID) {
                 isGuest = true;
                 document.body.classList.add('read-only');
                 document.querySelectorAll('.admin-only').forEach(e => e.remove());
                 document.getElementById('live-indicator').classList.remove('hidden');
-                loadLive(liveID);
-                setInterval(() => loadLive(liveID), 20000);
+                listenForUpdates(roomID);
                 showTab('rankings');
             } else {
-                const saved = localStorage.getItem('courtclub');
+                const saved = localStorage.getItem('courtclub_v3');
                 if(saved) {
                     data = JSON.parse(saved);
                     if(data.groups.length > 0) { renderMatches(); showTab('groups'); }
