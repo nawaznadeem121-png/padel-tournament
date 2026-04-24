@@ -185,7 +185,7 @@
             const court = data.courts[id] || "";
             return `
                 <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
-                    <select onchange="setCourt('${id}', this.value)" class="text-[9px] font-black uppercase bg-slate-100 rounded px-1 py-1 outline-none">
+                    <select onchange="setCourt('${id}', this.value)" class="text-[10px] font-black uppercase bg-slate-100 rounded px-1 py-1 outline-none">
                         <option value="">Select Court</option>
                         <option value="Court 1" ${court==='Court 1'?'selected':''}>Court 1</option>
                         <option value="Court 2" ${court==='Court 2'?'selected':''}>Court 2</option>
@@ -262,10 +262,20 @@
                     }).join('')}
                 </div>`).join('');
 
-            let qual = data.size == 12 ? [] : gStats.flatMap(s => [s[0].name, s[1].name]);
+            let qual = [];
             if(data.size == 12) {
                 let thirds = gStats.map((s, i) => ({...s[2], grp: String.fromCharCode(65+i)})).sort((a,b) => b.p - a.p || b.gd - a.gd);
                 qual = [gStats[0][0].name, gStats[1][0].name, gStats[2][0].name, gStats[0][1].name, gStats[1][1].name, gStats[2][1].name, (thirds[0]||{}).name, (thirds[1]||{}).name];
+                
+                document.getElementById('wildcard-area').classList.remove('hidden');
+                document.getElementById('wildcard-list').innerHTML = thirds.map((t, i) => `
+                    <div class="flex justify-between items-center text-[11px] p-2 ${i<2?'wildcard-row rounded-lg':''} font-bold">
+                        <span>Group ${t.grp}: ${t.name || '---'}</span>
+                        <span>${t.p}pts (${t.gd})</span>
+                    </div>`).join('');
+            } else {
+                qual = gStats.flatMap(s => [s[0].name, s[1].name]);
+                document.getElementById('wildcard-area').classList.add('hidden');
             }
 
             const wins = {};
