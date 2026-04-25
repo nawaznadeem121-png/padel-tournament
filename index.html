@@ -7,70 +7,80 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* BRAND COLORS - ADJUST HEX CODES HERE IF NEEDED */
+        /* REBRANDED COLOR PALETTE MATCHING ATTACHMENT */
         :root {
-            --brand-blue-dark: #0a192f;
-            --brand-blue-medium: #112240;
-            --brand-accent: #fb923c; /* Existing orange/gold accent */
-            --brand-bg: #f8fafc;
+            --cc-dark-navy: #111a33;
+            --cc-gold-accent: #f1e7d0;
+            --cc-timer-text: #e8dfc9;
+            --cc-bg-light: #f4f4f6;
+            --cc-tab-active-bg: #1e2b4f;
+            --cc-btn-green: #22a65a;
         }
 
         .tournament-tab { display: none; }
         .tournament-tab.active { display: block; }
         input, select { font-size: 16px !important; touch-action: manipulation; }
-        .active-tab-btn { border-bottom: 3px solid var(--brand-accent); color: var(--brand-accent); }
+        
+        /* Navigation Style */
+        #main-nav { background-color: var(--cc-dark-navy); }
+        #main-nav button { color: #8e99af; transition: color 0.2s; }
+        #main-nav button.active-tab-btn { color: white; border-bottom: none; }
+
+        /* Custom Styles to match image precisely */
+        .cc-header { background-color: var(--cc-dark-navy); }
+        .timer-box { border: 1px solid #334063; }
+        .bg-cc-dark { background-color: var(--cc-dark-navy); }
+        .bg-cc-active-tab { background-color: var(--cc-tab-active-bg); }
+        .border-cc-gold { border-color: var(--cc-gold-accent); }
+        .text-cc-timer { color: var(--cc-timer-text); }
+        .text-cc-gold { color: var(--cc-gold-accent); }
+        
+        /* Table and Row styles */
         .qualifying-row { background-color: #f0fdf4; font-weight: 800; color: #166534; }
         .wildcard-row { background-color: #fffbeb; font-weight: 800; color: #92400e; }
         .pulse { animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        /* Branded header style */
-        .bg-brand-dark { background-color: var(--brand-blue-dark); }
-        .bg-brand-medium { background-color: var(--brand-blue-medium); }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans">
+<body class="bg-[#f4f4f6] text-slate-900 font-sans">
 
-    <header class="bg-brand-dark text-white px-4 py-3 shadow-md">
-        <div class="flex justify-between items-center mb-1">
-            <div class="flex items-center gap-3">
-                <img src="logo.png" alt="Logo" class="h-8 w-auto object-contain">
-                <span class="font-black text-xl tracking-tighter uppercase text-slate-100">The Court Club</span>
+    <header class="cc-header text-white px-4 pt-6 pb-4 shadow-md">
+        <div class="flex flex-col items-center gap-6">
+            <img src="logo.png" alt="The Court Club" class="h-16 w-auto object-contain">
+            
+            <div class="timer-box w-full max-w-sm rounded-lg py-3 px-4 text-center">
+                <p class="text-[9px] font-medium uppercase tracking-[0.2em] text-cc-gold opacity-80 mb-1">REMAINING TOURNAMENT TIME</p>
+                <p id="global-countdown" class="text-3xl font-light text-cc-timer tracking-tight">03:00:00</p>
             </div>
-            <div id="live-indicator" class="hidden flex items-center gap-2 bg-red-600 px-2 py-1 rounded text-[10px] font-black uppercase">
+            
+            <div id="live-indicator" class="hidden flex items-center gap-2 bg-red-600 px-3 py-1.5 rounded-full text-[10px] font-black uppercase">
                 <span class="w-2 h-2 bg-white rounded-full pulse"></span> <span id="live-text">Live</span>
-            </div>
-        </div>
-        <div class="flex justify-center items-center bg-brand-medium rounded-lg py-2 mt-2 border border-slate-700/50">
-            <div class="text-center">
-                <p class="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Total Event Time Remaining</p>
-                <p id="global-countdown" class="text-xl font-black text-white">03:00:00</p>
             </div>
         </div>
     </header>
 
-    <nav id="main-nav" class="flex bg-white border-b sticky top-0 z-30 shadow-sm">
-        <button onclick="showTab('setup')" id="btn-setup" class="flex-1 py-4 text-[10px] font-black uppercase admin-only">Setup</button>
-        <button onclick="showTab('groups')" id="btn-groups" class="flex-1 py-4 text-[10px] font-black uppercase">Scores</button>
-        <button onclick="showTab('rankings')" id="btn-rankings" class="flex-1 py-4 text-[10px] font-black uppercase">Standings</button>
-        <button onclick="showTab('finals')" id="btn-finals" class="flex-1 py-4 text-[10px] font-black uppercase">Finals</button>
+    <nav id="main-nav" class="flex border-b border-[#253256] sticky top-0 z-30 shadow-sm px-2">
+        <button onclick="showTab('setup')" id="btn-setup" class="flex-1 py-4 text-[10px] font-black uppercase tracking-wider admin-only">Setup</button>
+        <button onclick="showTab('groups')" id="btn-groups" class="flex-1 py-4 text-[10px] font-black uppercase tracking-wider">Scores</button>
+        <button onclick="showTab('rankings')" id="btn-rankings" class="flex-1 py-4 text-[10px] font-black uppercase tracking-wider">Standings</button>
+        <button onclick="showTab('finals')" id="btn-finals" class="flex-1 py-4 text-[10px] font-black uppercase tracking-wider">Finals</button>
     </nav>
 
     <div class="p-4 max-w-md mx-auto pb-20">
         <div id="sync-overlay" class="hidden text-center py-20">
             <i class="fa-solid fa-cloud-arrow-down text-orange-400 text-4xl mb-4 animate-bounce"></i>
-            <p class="font-black text-slate-600 uppercase text-xs">Syncing Tournament...</p>
+            <p class="font-black text-slate-600 uppercase text-xs tracking-wider">Syncing Tournament...</p>
             <p id="sync-status" class="text-[10px] text-slate-400 mt-2 uppercase italic">Connecting...</p>
         </div>
 
-        <div id="tab-setup" class="tournament-tab admin-only">
+        <div id="tab-setup" class="tournament-tab active admin-only">
             <div class="grid grid-cols-3 gap-2 mb-6">
-                <button onclick="setTeams(12)" id="sz-12" class="py-3 rounded-xl border-2 font-bold text-orange-700 border-orange-400 bg-orange-50">12 Teams</button>
-                <button onclick="setTeams(16)" id="sz-16" class="py-3 rounded-xl border-2 font-bold text-slate-400 border-slate-200">16 Teams</button>
-                <button onclick="setTeams(32)" id="sz-32" class="py-3 rounded-xl border-2 font-bold text-slate-400 border-slate-200">32 Teams</button>
+                <button onclick="setTeams(12)" id="sz-12" class="py-4 rounded-lg border-2 font-bold text-slate-200 border-[#253256] bg-cc-active-tab">12 Teams</button>
+                <button onclick="setTeams(16)" id="sz-16" class="py-4 rounded-lg border font-bold text-slate-700 border-slate-300 bg-white">16 Teams</button>
+                <button onclick="setTeams(32)" id="sz-32" class="py-4 rounded-lg border font-bold text-slate-700 border-slate-300 bg-white">32 Teams</button>
             </div>
             <div id="team-list" class="space-y-2"></div>
-            <button onclick="startTourney()" class="w-full mt-6 bg-green-600 text-white font-black py-4 rounded-xl uppercase shadow-lg">Start Tournament</button>
+            <button onclick="startTourney()" class="w-full mt-6 bg-[#22a65a] text-white font-black py-4 rounded-lg uppercase shadow-lg tracking-wider">Start Tournament</button>
         </div>
 
         <div id="tab-groups" class="tournament-tab"><div id="match-list" class="space-y-6"></div></div>
@@ -79,7 +89,7 @@
             <div class="flex justify-between items-center mb-4 admin-only">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Live Rankings</span>
                 <div class="flex gap-2">
-                    <button id="live-btn" onclick="startLive()" class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Go Live</button>
+                    <button id="live-btn" onclick="startLive()" class="bg-[#1e2b4f] text-slate-100 text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Go Live</button>
                     <button id="push-btn" onclick="save()" class="hidden bg-orange-500 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Update All</button>
                 </div>
             </div>
@@ -94,23 +104,31 @@
     </div>
 
     <script>
-        /* DATA AND SYNC LOGIC - UNTOUCHED MASTER CODE */
         let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null, timers: {}, courts: {}, startTime: null };
         let isGuest = false;
         const EVENT_DURATION = 3 * 60 * 60 * 1000;
 
         function setTeams(n) {
             data.size = n; data.names = Array(n).fill("");
-            [12, 16, 32].forEach(s => {
+            // Update active state visual style
+            const sizes = [12, 16, 32];
+            sizes.forEach(s => {
                 const el = document.getElementById('sz-' + s);
-                if (el) el.className = (s == n) ? "py-3 rounded-xl border-2 font-bold text-orange-700 border-orange-400 bg-orange-50" : "py-3 rounded-xl border-2 font-bold text-slate-400 border-slate-200";
+                if (el) {
+                    if (s == n) {
+                        el.className = "py-4 rounded-lg border-2 font-bold text-slate-200 border-[#253256] bg-cc-active-tab";
+                    } else {
+                        el.className = "py-4 rounded-lg border font-bold text-slate-700 border-slate-300 bg-white";
+                    }
+                }
             });
             renderInputs();
         }
 
         function renderInputs() {
             const list = document.getElementById('team-list');
-            if(list) list.innerHTML = data.names.map((n, i) => `<input type="text" value="${n}" onchange="data.names[${i}]=this.value; save();" placeholder="Team ${i+1}" class="w-full p-3 border rounded-xl font-bold">`).join('');
+            // Stylized inputs matching attachment
+            if(list) list.innerHTML = data.names.map((n, i) => `<input type="text" value="${n}" onchange="data.names[${i}]=this.value; save();" placeholder="Team ${i+1} Name" class="w-full p-4 border border-slate-200 rounded-lg font-medium text-slate-800 placeholder-slate-400 bg-white shadow-inner">`).join('');
         }
 
         function startTourney() {
@@ -149,9 +167,13 @@
         async function initGuest(room) {
             isGuest = true;
             data.room = room;
+            
+            // UI Cleanup for Guest
             document.getElementById('live-indicator').classList.remove('hidden');
             document.getElementById('live-text').innerText = "Guest Mode";
             document.getElementById('sync-overlay').classList.remove('hidden');
+            
+            // Hide admin UI
             document.querySelectorAll('.admin-only').forEach(e => e.remove());
 
             const pollData = async () => {
@@ -232,7 +254,7 @@
                     </select>
                     <div class="flex items-center gap-2">
                         <span id="timer-${id}" class="text-[11px] font-mono font-black ${t.running ? 'text-red-500 animate-pulse' : 'text-slate-400'}">${formatTime(t.remaining)}</span>
-                        ${!isGuest ? `<button onclick="toggleTimer('${id}', ${mins})" class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[9px] font-bold uppercase">${t.running ? 'Pause' : 'Start'}</button>` : ''}
+                        ${!isGuest ? `<button onclick="toggleTimer('${id}', ${mins})" class="bg-[#1e2b4f] text-slate-100 px-2 py-1 rounded text-[9px] font-bold uppercase">${t.running ? 'Pause' : 'Start'}</button>` : ''}
                     </div>
                 </div>`;
         }
@@ -278,7 +300,7 @@
             const gPairs = [[0, 1], [2, 3], [0, 2], [1, 3], [0, 3], [1, 2]];
             document.getElementById('match-list').innerHTML = data.groups.map((g, gi) => `
                 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-                    <div class="bg-brand-dark text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65 + gi)}</div>
+                    <div class="bg-cc-dark text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65 + gi)}</div>
                     ${gPairs.map((p, mi) => {
                         const mid = `g${gi}m${mi}`, s = data.scores[mid] || ["", ""];
                         return `<div class="p-3 border-b last:border-0">
