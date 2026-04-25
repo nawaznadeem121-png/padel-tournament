@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+212<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -48,7 +48,7 @@
             <p id="sync-status" class="text-[10px] text-slate-400 mt-2 uppercase italic">Connecting...</p>
         </div>
 
-        <div id="tab-setup" class="tournament-tab active">
+        <div id="tab-setup" class="tournament-tab admin-only">
             <div class="grid grid-cols-3 gap-2 mb-6">
                 <button onclick="setTeams(12)" id="sz-12" class="py-3 rounded-xl border-2 font-bold text-orange-700 border-orange-400 bg-orange-50">12 Teams</button>
                 <button onclick="setTeams(16)" id="sz-16" class="py-3 rounded-xl border-2 font-bold text-slate-400 border-slate-200">16 Teams</button>
@@ -78,18 +78,10 @@
         <div id="tab-finals" class="tournament-tab"><div id="bracket-container" class="space-y-8"></div></div>
     </div>
 
-    <div id="debug-log" class="hidden m-4 p-2 bg-black text-green-400 font-mono text-[8px] rounded opacity-60">System Ready</div>
-
     <script>
         let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null, timers: {}, courts: {}, startTime: null };
         let isGuest = false;
         const EVENT_DURATION = 3 * 60 * 60 * 1000;
-
-        function log(msg) {
-            const el = document.getElementById('debug-log');
-            el.innerHTML += `<br>> ${msg}`;
-            console.log(msg);
-        }
 
         function setTeams(n) {
             data.size = n; data.names = Array(n).fill("");
@@ -147,9 +139,8 @@
             document.getElementById('live-text').innerText = "Guest Mode";
             document.getElementById('sync-overlay').classList.remove('hidden');
             
-            // Hide setup tab completely
-            const setupBtn = document.getElementById('btn-setup');
-            if(setupBtn) setupBtn.style.display = 'none';
+            // Force hide all Admin UI Elements including the setup tab
+            document.querySelectorAll('.admin-only').forEach(e => e.remove());
 
             const pollData = async () => {
                 try {
@@ -164,18 +155,18 @@
                             if (parsed.groups && parsed.groups.length > 0) {
                                 data = parsed;
                                 document.getElementById('sync-overlay').classList.add('hidden');
-                                showTab('rankings'); // Default guests to Standings
+                                showTab('rankings'); // Force switch to rankings once data lands
                                 return true;
                             }
                         }
                     }
-                } catch (e) { log("Error: " + e.message); }
+                } catch (e) { console.log("Poll Error", e); }
                 return false;
             };
 
             await pollData();
+            showTab('rankings'); // Ensure we aren't on setup while waiting
 
-            // Real-time listener
             const es = new EventSource(`https://ntfy.sh/${room}/sse`);
             es.onmessage = (e) => {
                 const p = JSON.parse(e.data);
@@ -333,10 +324,6 @@
             bh += `<div class="py-4 border-t-2 border-orange-200 mt-6"><p class="text-center text-[10px] font-black text-orange-500 uppercase tracking-widest mb-4">Championship</p></div>`;
             bh += matchHTML("F", wins.SF1, wins.SF2, "Finals", 30);
             document.getElementById('bracket-container').innerHTML = bh;
-
-            if (isGuest) {
-                document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'none');
-            }
         }
 
         function showTab(id) {
