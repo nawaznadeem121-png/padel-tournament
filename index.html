@@ -1,4 +1,4 @@
-naji<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,7 +11,6 @@ naji<!DOCTYPE html>
         .tournament-tab.active { display: block; }
         input, select { font-size: 16px !important; touch-action: manipulation; }
         .active-tab-btn { border-bottom: 3px solid #fb923c; color: #fb923c; }
-        .read-only input, .read-only select { pointer-events: none; background: #f1f5f9; border: none; appearance: none; }
         .qualifying-row { background-color: #f0fdf4; font-weight: 800; color: #166534; }
         .wildcard-row { background-color: #fffbeb; font-weight: 800; color: #92400e; }
         .pulse { animation: pulse 2s infinite; }
@@ -44,7 +43,7 @@ naji<!DOCTYPE html>
 
     <div class="p-4 max-w-md mx-auto pb-20">
         <div id="sync-overlay" class="hidden text-center py-20">
-            <i id="sync-icon" class="fa-solid fa-cloud-arrow-down text-orange-400 text-4xl mb-4 animate-bounce"></i>
+            <i class="fa-solid fa-cloud-arrow-down text-orange-400 text-4xl mb-4 animate-bounce"></i>
             <p class="font-black text-slate-600 uppercase text-xs">Syncing Tournament...</p>
             <p id="sync-status" class="text-[10px] text-slate-400 mt-2 uppercase italic">Connecting...</p>
         </div>
@@ -60,9 +59,10 @@ naji<!DOCTYPE html>
         </div>
 
         <div id="tab-groups" class="tournament-tab"><div id="match-list" class="space-y-6"></div></div>
+        
         <div id="tab-rankings" class="tournament-tab">
             <div class="flex justify-between items-center mb-4 admin-only">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Rankings</span>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Live Rankings</span>
                 <div class="flex gap-2">
                     <button id="live-btn" onclick="startLive()" class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Go Live</button>
                     <button id="push-btn" onclick="save()" class="hidden bg-orange-500 text-white text-[10px] font-bold px-4 py-2 rounded-lg uppercase">Update All</button>
@@ -74,12 +74,11 @@ naji<!DOCTYPE html>
                 <div id="wildcard-list" class="space-y-2"></div>
             </div>
         </div>
+
         <div id="tab-finals" class="tournament-tab"><div id="bracket-container" class="space-y-8"></div></div>
     </div>
 
-    <div id="debug-log" class="m-4 p-2 bg-black text-green-400 font-mono text-[8px] rounded overflow-auto max-h-24 opacity-60">
-        System: Ready
-    </div>
+    <div id="debug-log" class="hidden m-4 p-2 bg-black text-green-400 font-mono text-[8px] rounded opacity-60">System Ready</div>
 
     <script>
         let data = { size: 12, names: Array(12).fill(""), groups: [], scores: {}, ko: {}, room: null, timers: {}, courts: {}, startTime: null };
@@ -89,7 +88,7 @@ naji<!DOCTYPE html>
         function log(msg) {
             const el = document.getElementById('debug-log');
             el.innerHTML += `<br>> ${msg}`;
-            el.scrollTop = el.scrollHeight;
+            console.log(msg);
         }
 
         function setTeams(n) {
@@ -122,7 +121,6 @@ naji<!DOCTYPE html>
                 document.getElementById('push-btn').classList.remove('hidden');
                 document.getElementById('live-btn').innerText = "Copied!";
                 save(); 
-                log("Live set: " + data.room);
                 alert("Tournament LIVE! Link copied.");
             });
         }
@@ -131,12 +129,11 @@ naji<!DOCTYPE html>
             if (isGuest) return;
             localStorage.setItem('courtclub_v6', JSON.stringify(data));
             if (data.room) {
-                log("Cloud Save...");
                 fetch(`https://ntfy.sh/${data.room}`, { 
                     method: 'POST', 
                     body: JSON.stringify(data),
                     headers: { 'Cache-Control': 'no-cache' }
-                }).then(() => log("Saved OK")).catch(() => log("Save Fail"));
+                }).catch(e => console.error("Cloud Error", e));
             }
             refresh();
         }
@@ -144,17 +141,21 @@ naji<!DOCTYPE html>
         async function initGuest(room) {
             isGuest = true;
             data.room = room;
-            document.getElementById('sync-overlay').classList.remove('hidden');
+            
+            // UI Cleanup for Guest
             document.getElementById('live-indicator').classList.remove('hidden');
-            log("Syncing Room: " + room);
+            document.getElementById('live-text').innerText = "Guest Mode";
+            document.getElementById('sync-overlay').classList.remove('hidden');
+            
+            // Hide setup tab completely
+            const setupBtn = document.getElementById('btn-setup');
+            if(setupBtn) setupBtn.style.display = 'none';
 
             const pollData = async () => {
                 try {
-                    // Cache buster included
                     const response = await fetch(`https://ntfy.sh/${room}/json?poll=1&t=` + Date.now());
                     const text = await response.text();
                     const lines = text.trim().split('\n');
-                    
                     for (let i = lines.length - 1; i >= 0; i--) {
                         if (!lines[i]) continue;
                         const msg = JSON.parse(lines[i]);
@@ -162,9 +163,8 @@ naji<!DOCTYPE html>
                             const parsed = JSON.parse(msg.message);
                             if (parsed.groups && parsed.groups.length > 0) {
                                 data = parsed;
-                                log("Data found!");
                                 document.getElementById('sync-overlay').classList.add('hidden');
-                                refresh();
+                                showTab('rankings'); // Default guests to Standings
                                 return true;
                             }
                         }
@@ -173,11 +173,7 @@ naji<!DOCTYPE html>
                 return false;
             };
 
-            const success = await pollData();
-            if (!success) {
-                log("Waiting for host data...");
-                document.getElementById('sync-status').innerText = "Waiting for host to update...";
-            }
+            await pollData();
 
             // Real-time listener
             const es = new EventSource(`https://ntfy.sh/${room}/sse`);
@@ -185,21 +181,20 @@ naji<!DOCTYPE html>
                 const p = JSON.parse(e.data);
                 if (p.message) {
                     data = JSON.parse(p.message);
-                    log("Live Update!");
                     document.getElementById('sync-overlay').classList.add('hidden');
                     refresh();
                 }
             };
         }
 
-        // Logic Helpers
         function toggleTimer(id, mins) {
+            if (isGuest) return;
             if (!data.timers[id]) data.timers[id] = { remaining: mins * 60, running: true };
             else data.timers[id].running = !data.timers[id].running;
             save();
         }
 
-        function setCourt(id, val) { data.courts[id] = val; save(); }
+        function setCourt(id, val) { if(!isGuest) { data.courts[id] = val; save(); } }
 
         setInterval(() => {
             Object.keys(data.timers).forEach(id => {
@@ -207,7 +202,10 @@ naji<!DOCTYPE html>
                 if (t.running && t.remaining > 0) {
                     t.remaining--;
                     const el = document.getElementById(`timer-${id}`);
-                    if (el) { el.innerText = formatTime(t.remaining); el.className = "text-[11px] font-mono font-black " + (t.running ? "text-red-500 animate-pulse" : "text-slate-400"); }
+                    if (el) { 
+                        el.innerText = formatTime(t.remaining); 
+                        el.className = "text-[11px] font-mono font-black " + (t.running ? "text-red-500 animate-pulse" : "text-slate-400");
+                    }
                 }
             });
             if (data.startTime) {
@@ -225,23 +223,25 @@ naji<!DOCTYPE html>
             const court = data.courts[id] || "";
             return `
                 <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
-                    <select onchange="setCourt('${id}', this.value)" class="text-[10px] font-black uppercase bg-slate-100 rounded px-1 py-1 outline-none">
+                    <select onchange="setCourt('${id}', this.value)" ${isGuest?'disabled':''} class="text-[10px] font-black uppercase bg-slate-100 rounded px-1 py-1 outline-none">
                         <option value="">Court</option>
                         ${[1,2,3,4].map(c => `<option value="Court ${c}" ${court==='Court '+c?'selected':''}>Court ${c}</option>`).join('')}
                     </select>
                     <div class="flex items-center gap-2">
                         <span id="timer-${id}" class="text-[11px] font-mono font-black ${t.running ? 'text-red-500 animate-pulse' : 'text-slate-400'}">${formatTime(t.remaining)}</span>
-                        <button onclick="toggleTimer('${id}', ${mins})" class="admin-only bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[9px] font-bold uppercase">${t.running ? 'Pause' : 'Start'}</button>
+                        ${!isGuest ? `<button onclick="toggleTimer('${id}', ${mins})" class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[9px] font-bold uppercase">${t.running ? 'Pause' : 'Start'}</button>` : ''}
                     </div>
                 </div>`;
         }
 
         function updG(g, m, t, v) {
+            if(isGuest) return;
             const k = `g${g}m${m}`; if (!data.scores[k]) data.scores[k] = ["", ""];
             data.scores[k][t] = v === "" ? "" : parseInt(v); save();
         }
 
         function updK(id, tIdx, v) {
+            if(isGuest) return;
             if (!data.ko[id]) data.ko[id] = ["", ""];
             data.ko[id][tIdx] = v === "" ? "" : parseInt(v); save();
         }
@@ -282,8 +282,8 @@ naji<!DOCTYPE html>
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-bold w-20 truncate">${g[p[0]] || 'TBD'}</span>
                                 <div class="flex gap-1">
-                                    <input type="number" value="${s[0]}" oninput="updG(${gi},${mi},0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
-                                    <input type="number" value="${s[1]}" oninput="updG(${gi},${mi},1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                                    <input type="number" ${isGuest?'disabled':''} value="${s[0]}" oninput="updG(${gi},${mi},0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                                    <input type="number" ${isGuest?'disabled':''} value="${s[1]}" oninput="updG(${gi},${mi},1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
                                 </div>
                                 <span class="text-xs font-bold w-20 text-right truncate">${g[p[1]] || 'TBD'}</span>
                             </div>
@@ -315,8 +315,8 @@ naji<!DOCTYPE html>
                         <div class="flex justify-between items-center">
                             <span class="text-[11px] font-bold truncate w-24 ${w == t1 ? 'text-orange-500' : ''}">${t1 || 'TBD'}</span>
                             <div class="flex gap-1">
-                                <input type="number" value="${s[0]}" oninput="updK('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
-                                <input type="number" value="${s[1]}" oninput="updK('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                                <input type="number" ${isGuest?'disabled':''} value="${s[0]}" oninput="updK('${id}',0,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
+                                <input type="number" ${isGuest?'disabled':''} value="${s[1]}" oninput="updK('${id}',1,this.value)" class="w-10 h-10 text-center bg-slate-50 border rounded-lg font-bold">
                             </div>
                             <span class="text-[11px] font-bold text-right truncate w-24 ${w == t2 ? 'text-orange-500' : ''}">${t2 || 'TBD'}</span>
                         </div>
@@ -335,16 +335,19 @@ naji<!DOCTYPE html>
             document.getElementById('bracket-container').innerHTML = bh;
 
             if (isGuest) {
-                document.querySelectorAll('input, select').forEach(i => i.disabled = true);
-                document.querySelectorAll('.admin-only').forEach(e => e.remove());
+                document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'none');
             }
         }
 
         function showTab(id) {
             document.querySelectorAll('.tournament-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + id).classList.add('active');
+            const target = document.getElementById('tab-' + id);
+            if(target) target.classList.add('active');
+            
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab-btn'));
-            document.getElementById('btn-' + id).classList.add('active-tab-btn');
+            const btn = document.getElementById('btn-' + id);
+            if(btn) btn.classList.add('active-tab-btn');
+            
             refresh();
         }
 
@@ -352,13 +355,17 @@ naji<!DOCTYPE html>
             const urlParams = new URLSearchParams(window.location.search);
             const roomID = urlParams.get('room');
             const saved = localStorage.getItem('courtclub_v6');
-            if (saved && !roomID) data = JSON.parse(saved);
-
+            
             if (roomID) {
                 initGuest(roomID);
             } else {
+                if (saved) data = JSON.parse(saved);
                 setTeams(data.size);
-                if (data.groups.length) showTab('groups');
+                if (data.groups.length > 0) {
+                    showTab('groups');
+                } else {
+                    showTab('setup');
+                }
                 if (data.room) {
                     document.getElementById('live-indicator').classList.remove('hidden');
                     document.getElementById('push-btn').classList.remove('hidden');
