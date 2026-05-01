@@ -74,7 +74,8 @@
         </div>
 
         <div id="tab-setup" class="tournament-tab active admin-only">
-            <div class="grid grid-cols-3 gap-2 mb-6">
+            <div class="grid grid-cols-4 gap-2 mb-6">
+                <button onclick="setTeams(8)" id="sz-8" class="py-4 rounded-lg border font-bold text-slate-700 border-slate-300 bg-white">8 Teams</button>
                 <button onclick="setTeams(12)" id="sz-12" class="py-4 rounded-lg border-2 font-bold text-slate-200 border-[#253256] bg-cc-active-tab">12 Teams</button>
                 <button onclick="setTeams(16)" id="sz-16" class="py-4 rounded-lg border font-bold text-slate-700 border-slate-300 bg-white">16 Teams</button>
                 <button onclick="setTeams(32)" id="sz-32" class="py-4 rounded-lg border font-bold text-slate-700 border-slate-300 bg-white">32 Teams</button>
@@ -111,7 +112,7 @@
         function setTeams(n) {
             data.size = n; data.names = Array(n).fill("");
             // Update active state visual style
-            const sizes = [12, 16, 32];
+            const sizes = [8, 12, 16, 32];
             sizes.forEach(s => {
                 const el = document.getElementById('sz-' + s);
                 if (el) {
@@ -302,7 +303,7 @@
                 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
                     <div class="bg-cc-dark text-white px-4 py-2 text-[10px] font-black uppercase">Group ${String.fromCharCode(65 + gi)}</div>
                     ${gPairs.map((p, mi) => {
-                        const mid = `g${gi}m${mi}`, s = data.scores[mid] || ["", ""];
+                        const mid = `g${gi}m${mi}`, s = data.scores[mid] || ["", ""], dur = data.size == 8 ? 30 : 20;
                         return `<div class="p-3 border-b last:border-0">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-bold w-20 truncate">${g[p[0]] || 'TBD'}</span>
@@ -312,7 +313,7 @@
                                 </div>
                                 <span class="text-xs font-bold w-20 text-right truncate">${g[p[1]] || 'TBD'}</span>
                             </div>
-                            ${getMatchControlsHTML(mid, 20)}
+                            ${getMatchControlsHTML(mid, dur)}
                         </div>`
                     }).join('')}
                 </div>`).join('');
@@ -327,6 +328,8 @@
                         <span>Group ${t.grp}: ${t.name || '---'}</span>
                         <span>${t.p}pts (${t.gd})</span>
                     </div>`).join('');
+            } else {
+                document.getElementById('wildcard-area').classList.add('hidden');
             }
 
             const wins = {};
@@ -350,11 +353,17 @@
                 </div>`;
             };
 
-            let bh = `<p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Quarter Finals</p>`;
-            bh += matchHTML("QF1", qual[0], qual[7], "QF 1", 20) + matchHTML("QF2", qual[1], qual[6], "QF 2", 20) +
-                  matchHTML("QF3", qual[2], qual[5], "QF 3", 20) + matchHTML("QF4", qual[3], qual[4], "QF 4", 20);
-            bh += `<div class="h-px bg-slate-200 my-6"></div><p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Semi Finals</p>`;
-            bh += matchHTML("SF1", wins.QF1, wins.QF4, "Semi 1", 30) + matchHTML("SF2", wins.QF2, wins.QF3, "Semi 2", 30);
+            let bh = "";
+            if (data.size == 8) {
+                bh += `<p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Semi Finals</p>`;
+                bh += matchHTML("SF1", qual[0], qual[3], "Semi 1", 30) + matchHTML("SF2", qual[2], qual[1], "Semi 2", 30);
+            } else {
+                bh += `<p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Quarter Finals</p>`;
+                bh += matchHTML("QF1", qual[0], qual[7], "QF 1", 20) + matchHTML("QF2", qual[1], qual[6], "QF 2", 20) +
+                      matchHTML("QF3", qual[2], qual[5], "QF 3", 20) + matchHTML("QF4", qual[3], qual[4], "QF 4", 20);
+                bh += `<div class="h-px bg-slate-200 my-6"></div><p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Semi Finals</p>`;
+                bh += matchHTML("SF1", wins.QF1, wins.QF4, "Semi 1", 30) + matchHTML("SF2", wins.QF2, wins.QF3, "Semi 2", 30);
+            }
             bh += `<div class="py-4 border-t-2 border-orange-200 mt-6"><p class="text-center text-[10px] font-black text-orange-500 uppercase tracking-widest mb-4">Championship</p></div>`;
             bh += matchHTML("F", wins.SF1, wins.SF2, "Finals", 30);
             document.getElementById('bracket-container').innerHTML = bh;
